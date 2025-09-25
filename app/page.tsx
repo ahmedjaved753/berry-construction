@@ -1,102 +1,126 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { useAuthContext } from "@/components/auth/auth-provider"
+import { Navbar } from "@/components/navigation/navbar"
+import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
 import { useState, useEffect } from "react"
-import type { User } from "@supabase/supabase-js"
 
 export default function HomePage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { user, profile, loading } = useAuthContext()
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  console.log('[HOMEPAGE-DEBUG] HomePage rendering:', {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    userRole: profile?.role,
+    loading,
+    timestamp: new Date().toISOString()
+  })
+
+  // Add timeout for loading state to prevent infinite loading
   useEffect(() => {
-    const supabase = createClient()
+    if (loading && user) {
+      console.log('[HOMEPAGE-DEBUG] User exists but still loading, starting timeout...')
+      const timeout = setTimeout(() => {
+        console.log('[HOMEPAGE-DEBUG] ⚠️ Loading timeout reached - this might indicate a profile fetch issue')
+        setLoadingTimeout(true)
+      }, 15000) // 15 second timeout
 
-    // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      router.push("/auth/login")
-    } catch (error) {
-      console.error("Logout error:", error)
-    } finally {
-      setIsLoggingOut(false)
+      return () => clearTimeout(timeout)
+    } else {
+      setLoadingTimeout(false)
     }
+  }, [loading, user])
+
+  const handleForceRefresh = () => {
+    console.log('[HOMEPAGE-DEBUG] 🔄 Force refresh requested')
+    window.location.reload()
   }
 
-  if (loading) {
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  // Show loading state only if we don't have a user and are still loading
+  if (loading && !user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center max-w-md">
+            <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {loadingTimeout ? "Loading is taking longer than expected..." : "Loading..."}
+            </p>
+
+            {loadingTimeout && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 dark:text-gray-500">
+                  This might be a profile loading issue. Check the browser console for debug logs.
+                </p>
+                <Button onClick={handleForceRefresh} variant="outline">
+                  🔄 Refresh Page
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     )
   }
 
-  // If user is not authenticated, show landing page
+  // If user is not authenticated, show landing page with construction theme
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="text-xl font-semibold">AuthSystem</div>
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={() => router.push("/auth/login")}>
-                  Log in
-                </Button>
-                <Button size="sm" onClick={() => router.push("/auth/signup")}>
-                  Get started
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+        <Navbar />
+
+        <main className="container mx-auto px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Construction Card for non-authenticated users */}
+            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Berry Construction</h2>
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  Get Started
                 </Button>
               </div>
-            </div>
-          </div>
-        </header>
 
-        <main className="container mx-auto px-6 py-24">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 text-balance">
-              The complete platform to build secure apps
-            </h1>
-            <p className="text-xl text-muted-foreground mb-12 text-balance max-w-2xl mx-auto leading-relaxed">
-              Your team's toolkit to stop configuring and start innovating. Securely build, deploy, and scale the best
-              user experiences with role-based authentication.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="px-8" onClick={() => router.push("/auth/signup")}>
-                Get started
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="px-8 bg-transparent"
-                onClick={() => router.push("/auth/login")}
-              >
-                Sign in
-              </Button>
+              {/* Construction Progress Illustration */}
+              <div className="text-center py-12">
+                <div className="relative inline-block">
+                  <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl transform rotate-3">
+                    <div className="text-6xl">🚧</div>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                    <div className="text-white text-lg">⚠️</div>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+                  Platform Coming Soon
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
+                  We're building an amazing construction project management platform. Sign up to get early access!
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button size="lg" className="px-8 bg-gradient-to-r from-purple-600 to-blue-600" onClick={() => router.push("/auth/signup")}>
+                    Get Started
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="px-8"
+                    onClick={() => router.push("/auth/login")}
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -104,47 +128,49 @@ export default function HomePage() {
     )
   }
 
-  // If user is authenticated, show dashboard
+  // Always show construction content when user exists (even during profile loading)
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Dashboard</h1>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="text-sm bg-transparent"
-              disabled={isLoggingOut}
-            >
-              {isLoggingOut ? "Logging out..." : "Logout"}
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+      {/* Modern Navbar */}
+      <Navbar />
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
-            {/* Construction Worker Sign */}
-            <div className="relative">
-              <div className="w-32 h-32 bg-yellow-500 rounded-lg flex items-center justify-center shadow-lg transform rotate-3">
-                <div className="text-black text-6xl">🚧</div>
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <div className="text-white text-lg">⚠️</div>
-              </div>
-            </div>
+      {/* Sidebar for authenticated users */}
+      {user && (
+        <>
+          <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+          <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
+        </>
+      )}
 
-            {/* Work in Progress Message */}
-            <div className="space-y-4">
-              <h2 className="text-4xl font-bold text-foreground">Work in Progress</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl">We're building something amazing for you!</p>
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-6">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                <span>Construction in progress...</span>
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse delay-75"></div>
+      {/* Main Content with sidebar spacing */}
+      <main className={`transition-all duration-300 ${user ? 'md:ml-64' : ''} pt-6`}>
+        <div className="container mx-auto px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Construction Card */}
+            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Projects</h2>
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  View All
+                </Button>
+              </div>
+
+              {/* Construction Progress Illustration */}
+              <div className="text-center py-12">
+                <div className="relative inline-block">
+                  <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl transform rotate-3">
+                    <div className="text-6xl">🚧</div>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                    <div className="text-white text-lg">⚠️</div>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+                  Projects Coming Soon
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                  We're building an amazing project management system for your construction needs.
+                </p>
               </div>
             </div>
           </div>

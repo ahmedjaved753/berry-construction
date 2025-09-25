@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth/hooks"
+import { useAuthContext } from "@/components/auth/auth-provider"
 import { useRouter } from "next/navigation"
 import { useEffect, type ReactNode } from "react"
 
@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole, fallback }: ProtectedRouteProps) {
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading } = useAuthContext()
   const router = useRouter()
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function ProtectedRoute({ children, requiredRole, fallback }: ProtectedRo
         if (profile?.role === "admin") {
           router.push("/admin-dashboard")
         } else {
-          router.push("/dashboard")
+          router.push("/")
         }
       }
     }

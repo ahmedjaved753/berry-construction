@@ -11,12 +11,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/lib/auth/hooks"
+import { useAuthContext } from "@/components/auth/auth-provider"
 import { useRouter } from "next/navigation"
 
 export function UserNav() {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut } = useAuthContext()
   const router = useRouter()
+
+  console.log('[USER-NAV-DEBUG] UserNav rendering with:', {
+    hasUser: !!user,
+    hasProfile: !!profile,
+    userRole: profile?.role,
+    hasSignOut: typeof signOut === 'function'
+  })
 
   if (!user || !profile) return null
 
@@ -51,9 +58,24 @@ export function UserNav() {
         {profile.role === "admin" && (
           <DropdownMenuItem onClick={() => router.push("/admin-dashboard")}>Admin Dashboard</DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/")}>Home</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>Log out</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={async () => {
+            const timestamp = new Date().toISOString()
+            console.log(`[USER-NAV-DEBUG ${timestamp}] Logout clicked`)
+            console.log(`[USER-NAV-DEBUG ${timestamp}] SignOut function available: ${typeof signOut === 'function'}`)
+
+            if (signOut) {
+              console.log(`[USER-NAV-DEBUG ${timestamp}] Calling signOut function`)
+              await signOut()
+            } else {
+              console.error(`[USER-NAV-DEBUG ${timestamp}] ❌ SignOut function not available`)
+            }
+          }}
+        >
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

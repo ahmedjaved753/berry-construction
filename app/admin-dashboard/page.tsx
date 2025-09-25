@@ -1,268 +1,135 @@
-import { requireAdmin } from "@/lib/auth/server"
-import { UserNav } from "@/components/auth/user-nav"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuthContext } from "@/components/auth/auth-provider"
+import { Navbar } from "@/components/navigation/navbar"
+import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
-async function getAdminStats() {
-  const supabase = await createClient()
+export default function AdminDashboard() {
+  const { user, profile } = useAuthContext()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [stats, setStats] = useState({ totalUsers: 0, adminUsers: 0, regularUsers: 0, recentUsers: 0 })
+  const [recentUsers, setRecentUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-  // Get total users count
-  const { count: totalUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true })
-
-  // Get admin users count
-  const { count: adminUsers } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true })
-    .eq("role", "admin")
-
-  // Get regular users count
-  const { count: regularUsers } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true })
-    .eq("role", "user")
-
-  // Get recent users (last 7 days)
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-  const { count: recentUsers } = await supabase
-    .from("profiles")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", sevenDaysAgo.toISOString())
-
-  return {
-    totalUsers: totalUsers || 0,
-    adminUsers: adminUsers || 0,
-    regularUsers: regularUsers || 0,
-    recentUsers: recentUsers || 0,
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
   }
-}
 
-async function getRecentUsers() {
-  const supabase = await createClient()
+  useEffect(() => {
+    // Check if user is admin
+    if (!user) {
+      router.push("/auth/login")
+      return
+    }
 
-  const { data: users } = await supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(5)
+    if (profile && profile.role !== "admin") {
+      router.push("/")
+      return
+    }
 
-  return users || []
-}
+    const fetchAdminData = async () => {
+      const supabase = createClient()
 
-export default async function AdminDashboard() {
-  const { user, profile } = await requireAdmin()
-  const stats = await getAdminStats()
-  const recentUsers = await getRecentUsers()
+      try {
+        // Get stats
+        const { count: totalUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+        const { count: adminUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "admin")
+        const { count: regularUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "user")
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold">Admin Dashboard</h1>
-              <Badge variant="default">{profile?.role}</Badge>
-            </div>
-            <UserNav />
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        const { count: recentUsers } = await supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", sevenDaysAgo.toISOString())
+
+        setStats({
+          totalUsers: totalUsers || 0,
+          adminUsers: adminUsers || 0,
+          regularUsers: regularUsers || 0,
+          recentUsers: recentUsers || 0,
+        })
+
+        // Get recent users
+        const { data: users } = await supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(5)
+        setRecentUsers(users || [])
+
+      } catch (error) {
+        console.error("Error fetching admin data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (profile?.role === "admin") {
+      fetchAdminData()
+    }
+  }, [user, profile, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>Loading admin dashboard...</p>
           </div>
         </div>
-      </header>
+      </div>
+    )
+  }
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Welcome, {profile?.full_name || "Admin"}</h2>
-            <p className="text-muted-foreground">Manage your platform and monitor user activity.</p>
-          </div>
+  if (!user || profile?.role !== "admin") {
+    return null // Router will redirect
+  }
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="m22 2-5 10-5-5 10-5z" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground">All registered users</p>
-              </CardContent>
-            </Card>
+  return (
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+      {/* Modern Navbar */}
+      <Navbar />
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Admin Users</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M9 12l2 2 4-4" />
-                  <path d="M21 12c.552 0 1-.448 1-1V8a2 2 0 0 0-2-2h-5L9.293 0.293A1 1 0 0 0 8.586 0H4a2 2 0 0 0-2 2v9c0 .552.448 1 1 1z" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.adminUsers}</div>
-                <p className="text-xs text-muted-foreground">Users with admin access</p>
-              </CardContent>
-            </Card>
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.regularUsers}</div>
-                <p className="text-xs text-muted-foreground">Standard user accounts</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">New This Week</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M8 2v4" />
-                  <path d="M16 2v4" />
-                  <rect width="18" height="18" x="3" y="4" rx="2" />
-                  <path d="M3 10h18" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-500">{stats.recentUsers}</div>
-                <p className="text-xs text-muted-foreground">New registrations</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Actions</CardTitle>
-                <CardDescription>Platform management and configuration</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Link href="/admin-dashboard/users">
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      className="h-4 w-4 mr-2"
-                    >
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="m22 2-5 10-5-5 10-5z" />
-                    </svg>
-                    Manage Users
-                  </Button>
-                </Link>
-                <Button variant="outline" className="w-full justify-start bg-transparent" disabled>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 mr-2"
-                  >
-                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                  System Settings
+      {/* Main Content */}
+      <main className="md:ml-64 pt-6 transition-all duration-300">
+        <div className="container mx-auto px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Admin Dashboard Card */}
+            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Admin Dashboard</h2>
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  View All
                 </Button>
-                <Button variant="outline" className="w-full justify-start bg-transparent" disabled>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 mr-2"
-                  >
-                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                    <polyline points="14,2 14,8 20,8" />
-                  </svg>
-                  Generate Reports
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Users</CardTitle>
-                <CardDescription>Latest user registrations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentUsers.length > 0 ? (
-                    recentUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">{user.full_name || "Unnamed User"}</p>
-                          <p className="text-xs text-muted-foreground">{user.email}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={user.role === "admin" ? "default" : "secondary"} className="text-xs">
-                            {user.role}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No recent users</p>
-                  )}
+              {/* Construction Progress Illustration */}
+              <div className="text-center py-12">
+                <div className="relative inline-block">
+                  <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl transform rotate-3">
+                    <div className="text-6xl">🚧</div>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                    <div className="text-white text-lg">⚠️</div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+                  Admin Features Coming Soon
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                  We're building advanced admin tools and analytics for your construction management platform.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </main>

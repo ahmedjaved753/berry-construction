@@ -1,105 +1,115 @@
-import { requireAdmin } from "@/lib/auth/server"
-import { UserNav } from "@/components/auth/user-nav"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useAuthContext } from "@/components/auth/auth-provider"
+import { Navbar } from "@/components/navigation/navbar"
+import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/server"
-import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
-async function getAllUsers() {
-  const supabase = await createClient()
+export default function UsersManagementPage() {
+  const { user, profile } = useAuthContext()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-  const { data: users } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
 
-  return users || []
-}
+  useEffect(() => {
+    // Check if user is admin
+    if (!user) {
+      router.push("/auth/login")
+      return
+    }
 
-export default async function UsersManagementPage() {
-  const { user, profile } = await requireAdmin()
-  const users = await getAllUsers()
+    if (profile && profile.role !== "admin") {
+      router.push("/")
+      return
+    }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/admin-dashboard">
-                <Button variant="ghost" size="sm">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 mr-2"
-                  >
-                    <path d="m12 19-7-7 7-7" />
-                    <path d="M19 12H5" />
-                  </svg>
-                  Back
-                </Button>
-              </Link>
-              <h1 className="text-xl font-semibold">User Management</h1>
-              <Badge variant="default">Admin</Badge>
-            </div>
-            <UserNav />
+    const fetchUsers = async () => {
+      const supabase = createClient()
+
+      try {
+        const { data: userData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
+        setUsers(userData || [])
+      } catch (error) {
+        console.error("Error fetching users:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (profile?.role === "admin") {
+      fetchUsers()
+    }
+  }, [user, profile, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>Loading user management...</p>
           </div>
         </div>
-      </header>
+      </div>
+    )
+  }
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Manage Users</h2>
-            <p className="text-muted-foreground">View and manage all registered users on the platform.</p>
-          </div>
+  if (!user || profile?.role !== "admin") {
+    return null // Router will redirect
+  }
 
-          <Card>
-            <CardHeader>
-              <CardTitle>All Users ({users.length})</CardTitle>
-              <CardDescription>Complete list of registered users with their roles and details</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {users.length > 0 ? (
-                  users.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg bg-card"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">{user.full_name || "Unnamed User"}</p>
-                          <Badge variant={user.role === "admin" ? "default" : "secondary"} className="text-xs">
-                            {user.role}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                        <p className="text-xs text-muted-foreground">
-                          ID: {user.id.slice(0, 8)}... • Joined: {new Date(user.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" disabled className="bg-transparent">
-                          Edit
-                        </Button>
-                        <Button variant="outline" size="sm" disabled className="bg-transparent">
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No users found</p>
-                  </div>
-                )}
+  return (
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+      {/* Modern Navbar */}
+      <Navbar />
+
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
+
+      {/* Main Content */}
+      <main className="md:ml-64 pt-6 transition-all duration-300">
+        <div className="container mx-auto px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            {/* User Management Card */}
+            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">User Management</h2>
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                  View All
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Construction Progress Illustration */}
+              <div className="text-center py-12">
+                <div className="relative inline-block">
+                  <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl transform rotate-3">
+                    <div className="text-6xl">🚧</div>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+                    <div className="text-white text-lg">⚠️</div>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+                  User Management Coming Soon
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                  We're building advanced user management tools for your construction team administration.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
