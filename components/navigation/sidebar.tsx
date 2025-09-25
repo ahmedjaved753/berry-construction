@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAuthContext } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -19,6 +19,46 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     if (!user) return null
 
     const isAdmin = profile?.role === 'admin'
+
+    // Set CSS custom property for dynamic viewport height to handle mobile browser UI
+    useEffect(() => {
+        const setVH = () => {
+            const vh = window.innerHeight * 0.01
+            document.documentElement.style.setProperty('--vh', `${vh}px`)
+        }
+
+        const debouncedSetVH = () => {
+            // Use timeout to ensure browser UI animation is complete
+            setTimeout(setVH, 100)
+        }
+
+        // Initial set
+        setVH()
+
+        // Listen for various events that might change viewport
+        window.addEventListener('resize', debouncedSetVH)
+        window.addEventListener('orientationchange', debouncedSetVH)
+
+        // Listen for scroll events to detect browser UI changes
+        let ticking = false
+        const onScroll = () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    setVH()
+                    ticking = false
+                })
+                ticking = true
+            }
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true })
+
+        return () => {
+            window.removeEventListener('resize', debouncedSetVH)
+            window.removeEventListener('orientationchange', debouncedSetVH)
+            window.removeEventListener('scroll', onScroll)
+        }
+    }, [])
 
     // Navigation items based on user role
     const navigationItems = [
@@ -65,16 +105,18 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar - Mobile browser UI adaptive */}
             <aside
-                className={`fixed left-0 top-0 h-screen max-h-screen bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                className={`fixed left-0 top-0 bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                     }`}
                 style={{
-                    height: 'calc(100vh - env(safe-area-inset-bottom, 0px))',
-                    maxHeight: 'calc(100vh - env(safe-area-inset-bottom, 0px))'
+                    // Dynamic height that adapts to mobile browser UI changes
+                    height: 'calc(var(--vh, 1vh) * 100)',
+                    maxHeight: 'calc(var(--vh, 1vh) * 100)',
+                    minHeight: 'calc(var(--vh, 1vh) * 100)'
                 }}
             >
-                <div className="flex flex-col h-full overflow-hidden" style={{ maxHeight: 'calc(100vh - env(safe-area-inset-bottom, 0px))' }}>
+                <div className="flex flex-col h-full overflow-hidden" style={{ maxHeight: 'calc(var(--vh, 1vh) * 100)' }}>
                     {/* Header with close button - Fixed */}
                     <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
                         <div className="text-lg font-bold text-gray-900 dark:text-white">
