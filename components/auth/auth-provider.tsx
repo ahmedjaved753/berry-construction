@@ -9,7 +9,9 @@ interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  profileLoading: boolean
   signOut: () => Promise<void>
+  isLoggingOut?: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -18,13 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session - OPTIMIZED for faster loading
     const getInitialSession = async () => {
       const timestamp = new Date().toISOString()
-      console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔄 Getting initial session...`)
+      console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🚀 Getting initial session (optimized)...`)
 
       try {
         const {
@@ -34,19 +38,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Initial session exists: ${!!session}`)
 
         if (session?.user) {
-          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Initial user found: ${session.user.id}`)
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Initial user found: ${session.user.id}`)
+          // OPTIMIZATION: Set user immediately - don't wait for profile
           setUser(session.user)
 
-          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ⏳ Fetching initial profile...`)
-          await fetchUserProfile(session.user.id)
-          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Initial profile fetch completed`)
+          // OPTIMIZATION: Set loading to false immediately after user is set
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🚀 Setting loading to false (user available)`)
+          setLoading(false)
+
+          // OPTIMIZATION: Fetch profile in background (non-blocking)
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔄 Starting background profile fetch...`)
+          setProfileLoading(true)
+          fetchUserProfile(session.user.id).then(() => {
+            console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Background profile fetch completed`)
+            setProfileLoading(false)
+          }).catch((error) => {
+            console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ⚠️ Background profile fetch failed:`, error)
+            setProfileLoading(false)
+          })
         } else {
-          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] No initial session`)
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] No initial session - setting loading to false`)
+          setLoading(false)
         }
       } catch (error) {
         console.error(`[AUTH-PROVIDER-DEBUG ${timestamp}] ❌ Error getting initial session:`, error)
-      } finally {
-        console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔄 Setting initial loading to false`)
         setLoading(false)
       }
     }
@@ -67,14 +82,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Setting user: ${session.user.id}`)
           setUser(session.user)
 
-          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ⏳ Starting profile fetch...`)
-          await fetchUserProfile(session.user.id)
-          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Profile fetch completed`)
+          // OPTIMIZATION: Fetch profile in background (non-blocking)
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔄 Starting background profile fetch...`)
+          setProfileLoading(true)
+          fetchUserProfile(session.user.id).then(() => {
+            console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Background profile fetch completed`)
+            setProfileLoading(false)
+          }).catch((error) => {
+            console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ⚠️ Background profile fetch failed:`, error)
+            setProfileLoading(false)
+          })
 
         } else {
           console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Clearing user and profile`)
           setUser(null)
           setProfile(null)
+          setProfileLoading(false)
+
+          // Reset logging out state on sign out
+          setIsLoggingOut(false)
 
           // If this is a SIGNED_OUT event, redirect to login
           if (event === 'SIGNED_OUT') {
@@ -85,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error(`[AUTH-PROVIDER-DEBUG ${timestamp}] ❌ Error in auth state change:`, error)
       } finally {
-        console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔄 Setting loading to false`)
+        console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🚀 Setting loading to false (optimized)`)
         setLoading(false)
         console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Auth state change complete`)
       }
@@ -192,17 +218,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timestamp = new Date().toISOString()
     try {
       console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Auth provider signOut called`)
+      setIsLoggingOut(true)
 
       const { error } = await supabase.auth.signOut()
 
       if (error) {
         console.error(`[AUTH-PROVIDER-DEBUG ${timestamp}] Supabase signOut error:`, error)
+        setIsLoggingOut(false)
         throw error
       }
 
       console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Auth provider signOut completed successfully`)
+      // Don't set isLoggingOut to false here - let the auth state change handle cleanup
     } catch (error) {
       console.error(`[AUTH-PROVIDER-DEBUG ${timestamp}] Error in auth provider signOut:`, error)
+      setIsLoggingOut(false)
       throw error // Re-throw to let calling component handle it
     }
   }
@@ -213,7 +243,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         profile,
         loading,
+        profileLoading,
         signOut,
+        isLoggingOut,
       }}
     >
       {children}

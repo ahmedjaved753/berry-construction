@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -17,7 +16,6 @@ export default function SignupPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
-  const [role, setRole] = useState("user")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -48,7 +46,7 @@ export default function SignupPage() {
           emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/`,
           data: {
             full_name: fullName,
-            role: role,
+            role: "user", // All new signups default to "user" role
           },
         },
       })
@@ -105,20 +103,6 @@ export default function SignupPage() {
                   required
                   className="h-11 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                 />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="role" className="text-sm font-medium text-foreground">
-                  Account type
-                </Label>
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger className="h-11 bg-input border-border text-foreground focus:ring-2 focus:ring-ring focus:border-transparent transition-all">
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
               <div className="space-y-3">
                 <Label htmlFor="password" className="text-sm font-medium text-foreground">

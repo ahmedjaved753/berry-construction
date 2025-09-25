@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
-    const { user, profile, signOut, isLoggingOut } = useAuthContext()
+    const { user, profile, signOut, isLoggingOut, profileLoading } = useAuthContext()
     const pathname = usePathname()
 
     // Only show sidebar if user exists (profile can be loading)
@@ -183,26 +183,34 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
                     {/* User info and logout section - Fixed at bottom */}
                     <div className="flex-shrink-0 px-4 py-2 pb-6 md:pb-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-2">
-                        {profile ? (
+                        {user ? (
                             <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
                                     <span className="text-white font-semibold text-sm">
-                                        {(profile.full_name || profile.email || user.email || 'U')[0].toUpperCase()}
+                                        {/* OPTIMIZED: Use email immediately, fallback to profile name when loaded */}
+                                        {(profile?.full_name || user.email || 'U')[0].toUpperCase()}
                                     </span>
                                 </div>
                                 <div className="flex-1 min-w-0">
+                                    {/* OPTIMIZED: Show user email immediately, upgrade to full name when profile loads */}
                                     <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                        {profile.full_name || user.email || 'User'}
+                                        {profile?.full_name || user.email?.split('@')[0] || 'User'}
+                                        {profileLoading && !profile?.full_name && (
+                                            <span className="ml-2 inline-block w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                                        )}
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                            {profile.email || user.email}
+                                            {user.email}
                                         </span>
-                                        {isAdmin && (
+                                        {/* OPTIMIZED: Show admin badge immediately when profile loads */}
+                                        {profile?.role === 'admin' ? (
                                             <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
                                                 Admin
                                             </span>
-                                        )}
+                                        ) : profileLoading ? (
+                                            <div className="w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                        ) : null}
                                     </div>
                                 </div>
                             </div>
