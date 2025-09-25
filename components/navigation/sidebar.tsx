@@ -69,11 +69,14 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             <aside
                 className={`fixed left-0 top-0 h-screen max-h-screen bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                     }`}
-                style={{ height: '100vh', maxHeight: '100vh' }}
+                style={{
+                    height: 'calc(100vh - env(safe-area-inset-bottom, 0px))',
+                    maxHeight: 'calc(100vh - env(safe-area-inset-bottom, 0px))'
+                }}
             >
-                <div className="flex flex-col h-full overflow-hidden" style={{ maxHeight: '100vh' }}>
+                <div className="flex flex-col h-full overflow-hidden" style={{ maxHeight: 'calc(100vh - env(safe-area-inset-bottom, 0px))' }}>
                     {/* Header with close button - Fixed */}
-                    <div className="flex-shrink-0 p-4 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
+                    <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
                         <div className="text-lg font-bold text-gray-900 dark:text-white">
                             Berry Construction
                         </div>
@@ -90,9 +93,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     </div>
 
                     {/* Navigation - Scrollable */}
-                    <nav className="flex-1 overflow-y-auto p-4 min-h-0" style={{ scrollbarWidth: 'thin' }}>
-                        <div className="space-y-2 pb-4">
-                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-2">
+                    <nav className="flex-1 overflow-y-auto px-4 py-2 min-h-0" style={{ scrollbarWidth: 'thin' }}>
+                        <div className="space-y-2 pb-2">
+                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-1">
                                 Navigation
                             </div>
 
@@ -109,7 +112,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                                 onToggle()
                                             }
                                         }}
-                                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${isActive
+                                        className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group ${isActive
                                             ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-100 shadow-sm"
                                             : "text-gray-700 hover:text-purple-700 hover:bg-purple-50 dark:text-gray-300 dark:hover:text-purple-300 dark:hover:bg-purple-950/20"
                                             }`}
@@ -137,7 +140,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     </nav>
 
                     {/* User info and logout section - Fixed at bottom */}
-                    <div className="flex-shrink-0 p-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-3">
+                    <div className="flex-shrink-0 px-4 py-2 pb-6 md:pb-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-2">
                         {profile ? (
                             <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
@@ -175,7 +178,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                         <button
                             onClick={signOut}
                             disabled={isLoggingOut}
-                            className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg transition-colors duration-200 border border-red-200 dark:border-red-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg transition-colors duration-200 border border-red-200 dark:border-red-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoggingOut ? (
                                 <>
@@ -190,12 +193,6 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                             )}
                         </button>
 
-                        {/* App info */}
-                        <div className="pt-2 border-t border-gray-200/40 dark:border-gray-800/40">
-                            <div className="text-xs text-gray-400 dark:text-gray-500 text-center">
-                                v1.0.0
-                            </div>
-                        </div>
                     </div>
                 </div>
             </aside>
