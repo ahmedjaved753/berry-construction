@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuthContext } from "@/components/auth/auth-provider"
-import { Navbar } from "@/components/navigation/navbar"
 import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
 import { useState, useEffect } from "react"
 
@@ -49,8 +48,7 @@ export default function HomePage() {
   if (loading && !user) {
     return (
       <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center max-w-md">
             <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
@@ -77,9 +75,7 @@ export default function HomePage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-        <Navbar />
-
-        <main className="container mx-auto px-6 py-8">
+        <main className="container mx-auto px-6 py-8 min-h-screen flex items-center justify-center">
           <div className="max-w-4xl mx-auto">
             {/* Construction Card for non-authenticated users */}
             <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
@@ -131,8 +127,6 @@ export default function HomePage() {
   // Always show construction content when user exists (even during profile loading)
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-      {/* Modern Navbar */}
-      <Navbar />
 
       {/* Sidebar for authenticated users */}
       {user && (
@@ -143,8 +137,8 @@ export default function HomePage() {
       )}
 
       {/* Main Content with sidebar spacing */}
-      <main className={`transition-all duration-300 ${user ? 'md:ml-64' : ''} pt-6`}>
-        <div className="container mx-auto px-6 py-8">
+      <main className={`transition-all duration-300 ${user ? 'md:ml-64' : ''} min-h-screen flex items-center justify-center p-6`}>
+        <div className="container mx-auto">
           <div className="max-w-4xl mx-auto">
             {/* Construction Card */}
             <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">

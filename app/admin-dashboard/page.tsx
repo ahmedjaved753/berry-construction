@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useAuthContext } from "@/components/auth/auth-provider"
-import { Navbar } from "@/components/navigation/navbar"
 import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -74,8 +73,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p>Loading admin dashboard...</p>
@@ -91,15 +89,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-      {/* Modern Navbar */}
-      <Navbar />
-
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
       {/* Main Content */}
-      <main className="md:ml-64 pt-6 transition-all duration-300">
+      <main className="md:ml-64 min-h-screen flex items-center justify-center p-6 transition-all duration-300">
         <div className="container mx-auto px-6 py-8">
           <div className="max-w-7xl mx-auto">
             {/* Admin Dashboard Card */}

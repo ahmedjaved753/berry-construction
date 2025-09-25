@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
-    const { user, profile } = useAuthContext()
+    const { user, profile, signOut, isLoggingOut } = useAuthContext()
     const pathname = usePathname()
 
     // Only show sidebar if user exists (profile can be loading)
@@ -67,57 +67,25 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
             {/* Sidebar */}
             <aside
-                className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                className={`fixed left-0 top-0 h-screen bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                     }`}
             >
                 <div className="flex flex-col h-full">
-                    {/* User info section */}
-                    <div className="p-6 border-b border-gray-200/60 dark:border-gray-800/60">
-                        <div className="flex items-center justify-between">
-                            {profile ? (
-                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                                        <span className="text-white font-semibold">
-                                            {(profile.full_name || profile.email || user.email || 'U')[0].toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                            {profile.full_name || user.email || 'User'}
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                {profile.email || user.email}
-                                            </span>
-                                            {isAdmin && (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
-                                                    Admin
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                                    <div className="flex-1 space-y-2">
-                                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Close button for mobile */}
-                            <button
-                                onClick={onToggle}
-                                className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex-shrink-0"
-                            >
-                                <div className="w-5 h-5 relative">
-                                    <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform rotate-45 top-2.5" />
-                                    <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform -rotate-45 top-2.5" />
-                                </div>
-                            </button>
+                    {/* Header with close button */}
+                    <div className="p-4 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">
+                            Berry Construction
                         </div>
+                        {/* Close button for mobile */}
+                        <button
+                            onClick={onToggle}
+                            className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex-shrink-0"
+                        >
+                            <div className="w-5 h-5 relative">
+                                <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform rotate-45 top-2.5" />
+                                <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform -rotate-45 top-2.5" />
+                            </div>
+                        </button>
                     </div>
 
                     {/* Navigation */}
@@ -167,13 +135,65 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                         </div>
                     </nav>
 
-                    {/* Footer */}
-                    <div className="p-4 border-t border-gray-200/60 dark:border-gray-800/60">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                            Berry Construction
-                        </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1">
-                            v1.0.0
+                    {/* User info and logout section */}
+                    <div className="p-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-3">
+                        {profile ? (
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                                    <span className="text-white font-semibold text-sm">
+                                        {(profile.full_name || profile.email || user.email || 'U')[0].toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                        {profile.full_name || user.email || 'User'}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                            {profile.email || user.email}
+                                        </span>
+                                        {isAdmin && (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+                                                Admin
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Logout button */}
+                        <button
+                            onClick={signOut}
+                            disabled={isLoggingOut}
+                            className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg transition-colors duration-200 border border-red-200 dark:border-red-800/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoggingOut ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium">Logging out...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-sm">🔓</span>
+                                    <span className="text-sm font-medium">Logout</span>
+                                </>
+                            )}
+                        </button>
+
+                        {/* App info */}
+                        <div className="pt-2 border-t border-gray-200/40 dark:border-gray-800/40">
+                            <div className="text-xs text-gray-400 dark:text-gray-500 text-center">
+                                v1.0.0
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -192,7 +212,7 @@ export function SidebarToggle({ isOpen, onToggle }: { isOpen: boolean; onToggle:
             onClick={onToggle}
             variant="default"
             size="sm"
-            className="md:hidden fixed top-20 left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 flex items-center px-4 py-2.5 rounded-lg"
+            className="md:hidden fixed top-4 left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 flex items-center px-4 py-2.5 rounded-lg"
         >
             <div className="w-4 h-4 relative flex-shrink-0">
                 <span className="absolute h-0.5 w-4 bg-current transform rotate-0 top-1" />

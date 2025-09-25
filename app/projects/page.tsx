@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useAuthContext } from "@/components/auth/auth-provider"
-import { Navbar } from "@/components/navigation/navbar"
 import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -65,8 +64,7 @@ export default function ProjectsPage() {
     if (!user) {
         return (
             <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-                <Navbar />
-                <div className="flex items-center justify-center min-h-[80vh]">
+                <div className="flex items-center justify-center min-h-screen">
                     <div className="text-center">
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                             Please sign in to view projects
@@ -82,13 +80,11 @@ export default function ProjectsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-            <Navbar />
-
             <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
             <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
             {/* Main Content */}
-            <main className="md:ml-64 pt-6 transition-all duration-300">
+            <main className="md:ml-64 min-h-screen flex items-center justify-center p-6 transition-all duration-300">
                 <div className="container mx-auto px-6 py-8">
                     <div className="max-w-7xl mx-auto">
                         {/* Projects Card */}
