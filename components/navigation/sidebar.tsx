@@ -67,12 +67,13 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
             {/* Sidebar */}
             <aside
-                className={`fixed left-0 top-0 h-screen bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                className={`fixed left-0 top-0 h-screen max-h-screen bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                     }`}
+                style={{ height: '100vh', maxHeight: '100vh' }}
             >
-                <div className="flex flex-col h-full">
-                    {/* Header with close button */}
-                    <div className="p-4 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
+                <div className="flex flex-col h-full overflow-hidden" style={{ maxHeight: '100vh' }}>
+                    {/* Header with close button - Fixed */}
+                    <div className="flex-shrink-0 p-4 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
                         <div className="text-lg font-bold text-gray-900 dark:text-white">
                             Berry Construction
                         </div>
@@ -88,9 +89,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                         </button>
                     </div>
 
-                    {/* Navigation */}
-                    <nav className="flex-1 p-4">
-                        <div className="space-y-2">
+                    {/* Navigation - Scrollable */}
+                    <nav className="flex-1 overflow-y-auto p-4 min-h-0" style={{ scrollbarWidth: 'thin' }}>
+                        <div className="space-y-2 pb-4">
                             <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-2">
                                 Navigation
                             </div>
@@ -135,8 +136,8 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                         </div>
                     </nav>
 
-                    {/* User info and logout section */}
-                    <div className="p-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-3">
+                    {/* User info and logout section - Fixed at bottom */}
+                    <div className="flex-shrink-0 p-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-3">
                         {profile ? (
                             <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
