@@ -73,38 +73,51 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 <div className="flex flex-col h-full">
                     {/* User info section */}
                     <div className="p-6 border-b border-gray-200/60 dark:border-gray-800/60">
-                        {profile ? (
-                            <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                                    <span className="text-white font-semibold">
-                                        {(profile.full_name || profile.email || user.email || 'U')[0].toUpperCase()}
-                                    </span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                        {profile.full_name || user.email || 'User'}
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                            {profile.email || user.email}
+                        <div className="flex items-center justify-between">
+                            {profile ? (
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                                        <span className="text-white font-semibold">
+                                            {(profile.full_name || profile.email || user.email || 'U')[0].toUpperCase()}
                                         </span>
-                                        {isAdmin && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
-                                                Admin
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                            {profile.full_name || user.email || 'User'}
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                {profile.email || user.email}
                                             </span>
-                                        )}
+                                            {isAdmin && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+                                                    Admin
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                            ) : (
+                                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+
+                            {/* Close button for mobile */}
+                            <button
+                                onClick={onToggle}
+                                className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex-shrink-0"
+                            >
+                                <div className="w-5 h-5 relative">
+                                    <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform rotate-45 top-2.5" />
+                                    <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform -rotate-45 top-2.5" />
+                                </div>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Navigation */}
@@ -171,29 +184,23 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
 // Toggle button for mobile sidebar
 export function SidebarToggle({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
+    // Only show when sidebar is closed (for opening it)
+    if (isOpen) return null
+
     return (
         <Button
             onClick={onToggle}
             variant="default"
             size="sm"
-            className="md:hidden fixed top-20 left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 px-3 py-2"
+            className="md:hidden fixed top-20 left-4 z-50 bg-purple-600 hover:bg-purple-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 flex items-center px-4 py-2.5 rounded-lg"
         >
-            <div className="w-4 h-4 relative">
-                <span
-                    className={`absolute h-0.5 w-4 bg-current transform transition-all duration-300 ${isOpen ? "rotate-45 top-2" : "rotate-0 top-1"
-                        }`}
-                />
-                <span
-                    className={`absolute h-0.5 w-4 bg-current transform transition-all duration-300 top-2 ${isOpen ? "opacity-0" : "opacity-100"
-                        }`}
-                />
-                <span
-                    className={`absolute h-0.5 w-4 bg-current transform transition-all duration-300 ${isOpen ? "-rotate-45 top-2" : "rotate-0 top-3"
-                        }`}
-                />
+            <div className="w-4 h-4 relative flex-shrink-0">
+                <span className="absolute h-0.5 w-4 bg-current transform rotate-0 top-1" />
+                <span className="absolute h-0.5 w-4 bg-current transform top-2" />
+                <span className="absolute h-0.5 w-4 bg-current transform rotate-0 top-3" />
             </div>
-            <span className="text-xs font-medium">
-                {isOpen ? 'Close' : 'Menu'}
+            <span className="text-sm font-medium ml-3">
+                Menu
             </span>
         </Button>
     )
