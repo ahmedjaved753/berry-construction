@@ -12,6 +12,8 @@ interface AuthContextType {
   profileLoading: boolean
   signOut: () => Promise<void>
   isLoggingOut?: boolean
+  emailConfirmed: boolean
+  checkEmailConfirmation: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [emailConfirmed, setEmailConfirmed] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -41,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Initial user found: ${session.user.id}`)
           // OPTIMIZATION: Set user immediately - don't wait for profile
           setUser(session.user)
+
+          // Check email confirmation status
+          setEmailConfirmed(!!session.user.email_confirmed_at)
 
           // OPTIMIZATION: Set loading to false immediately after user is set
           console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🚀 Setting loading to false (user available)`)
@@ -82,6 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Setting user: ${session.user.id}`)
           setUser(session.user)
 
+          // Check email confirmation status
+          setEmailConfirmed(!!session.user.email_confirmed_at)
+
           // OPTIMIZATION: Fetch profile in background (non-blocking)
           console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔄 Starting background profile fetch...`)
           setProfileLoading(true)
@@ -98,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null)
           setProfile(null)
           setProfileLoading(false)
+          setEmailConfirmed(false)
 
           // Reset logging out state on sign out
           setIsLoggingOut(false)
@@ -214,6 +224,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const checkEmailConfirmation = async () => {
+    const timestamp = new Date().toISOString()
+    console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] 🔍 Checking email confirmation status`)
+
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser()
+
+      if (error || !user) {
+        console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ⚠️ No user found or error:`, error)
+        setEmailConfirmed(false)
+        return
+      }
+
+      const isConfirmed = !!user.email_confirmed_at
+      console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] Email confirmation status:`, {
+        userId: user.id,
+        email: user.email,
+        confirmed: isConfirmed,
+        confirmedAt: user.email_confirmed_at
+      })
+
+      setEmailConfirmed(isConfirmed)
+
+      // If email is confirmed, sync with profile
+      if (isConfirmed) {
+        const { error: syncError } = await supabase
+          .from('profiles')
+          .update({
+            email_confirmed_at: user.email_confirmed_at,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+          .eq('email_confirmed_at', null) // Only update if not already set
+
+        if (syncError) {
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ⚠️ Profile sync error:`, syncError)
+        } else {
+          console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ✅ Profile synced with email confirmation`)
+        }
+      }
+
+    } catch (error) {
+      console.log(`[AUTH-PROVIDER-DEBUG ${timestamp}] ❌ Error checking email confirmation:`, error)
+      setEmailConfirmed(false)
+    }
+  }
+
   const signOut = async () => {
     const timestamp = new Date().toISOString()
     try {
@@ -246,6 +303,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileLoading,
         signOut,
         isLoggingOut,
+        emailConfirmed,
+        checkEmailConfirmation,
       }}
     >
       {children}
