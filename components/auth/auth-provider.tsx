@@ -13,7 +13,6 @@ interface AuthContextType {
   signOut: () => Promise<void>
   isLoggingOut?: boolean
   emailConfirmed: boolean
-  checkEmailConfirmation: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -160,34 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const checkEmailConfirmation = async () => {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser()
-
-      if (error || !user) {
-        setEmailConfirmed(false)
-        return
-      }
-
-      const isConfirmed = !!user.email_confirmed_at
-      setEmailConfirmed(isConfirmed)
-
-      // If email is confirmed, sync with profile
-      if (isConfirmed) {
-        await supabase
-          .from('profiles')
-          .update({
-            email_confirmed_at: user.email_confirmed_at,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id)
-          .eq('email_confirmed_at', null) // Only update if not already set
-      }
-
-    } catch (error) {
-      setEmailConfirmed(false)
-    }
-  }
 
   const signOut = async () => {
     try {
@@ -217,7 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         isLoggingOut,
         emailConfirmed,
-        checkEmailConfirmation,
       }}
     >
       {children}
