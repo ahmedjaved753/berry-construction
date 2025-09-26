@@ -32,7 +32,7 @@ export function Navbar() {
             if (error) throw error
             router.push("/auth/login")
         } catch (error) {
-            console.error("Logout error:", error)
+            // Handle logout error silently
         } finally {
             setIsLoggingOut(false)
         }

@@ -59,7 +59,7 @@ export default function AdminDashboard() {
         setRecentUsers(users || [])
 
       } catch (error) {
-        console.error("Error fetching admin data:", error)
+        // Handle error silently
       } finally {
         setLoading(false)
       }

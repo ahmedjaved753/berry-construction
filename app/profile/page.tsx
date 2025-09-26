@@ -56,7 +56,7 @@ export default function ProfilePage() {
       // Auto-hide success message after 3 seconds
       setTimeout(() => setMessage(null), 3000)
     } catch (error) {
-      console.error("Error updating profile:", error)
+      // Handle error silently
       setMessage({ type: "error", text: "Failed to update profile. Please try again." })
     } finally {
       setIsUpdating(false)

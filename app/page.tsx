@@ -12,20 +12,11 @@ export default function HomePage() {
   const [loadingTimeout, setLoadingTimeout] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  console.log('[HOMEPAGE-DEBUG] HomePage rendering:', {
-    hasUser: !!user,
-    hasProfile: !!profile,
-    userRole: profile?.role,
-    loading,
-    timestamp: new Date().toISOString()
-  })
 
   // Add timeout for auth loading state (not profile loading)
   useEffect(() => {
     if (loading) {
-      console.log('[HOMEPAGE-DEBUG] Auth still loading, starting timeout...')
       const timeout = setTimeout(() => {
-        console.log('[HOMEPAGE-DEBUG] ⚠️ Auth loading timeout reached - this might indicate an auth issue')
         setLoadingTimeout(true)
       }, 10000) // 10 second timeout for auth (reduced from 15s)
 
@@ -36,7 +27,6 @@ export default function HomePage() {
   }, [loading])
 
   const handleForceRefresh = () => {
-    console.log('[HOMEPAGE-DEBUG] 🔄 Force refresh requested')
     window.location.reload()
   }
 

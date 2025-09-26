@@ -19,22 +19,10 @@ export default function VerifyEmailPage() {
 
   const checkEmailConfirmation = async () => {
     setIsCheckingStatus(true)
-    const timestamp = new Date().toISOString()
-    console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] 🔍 Checking email confirmation status`)
-
     const supabase = createClient()
 
     try {
       const { data: { user }, error } = await supabase.auth.getUser()
-
-      console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] User check:`, {
-        hasUser: !!user,
-        userId: user?.id,
-        email: user?.email,
-        emailConfirmed: user?.email_confirmed_at ? 'YES' : 'NO',
-        confirmedAt: user?.email_confirmed_at,
-        error: error?.message
-      })
 
       if (error || !user) {
         setConfirmationStatus({
@@ -46,8 +34,6 @@ export default function VerifyEmailPage() {
       }
 
       if (user.email_confirmed_at) {
-        console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] ✅ Email is confirmed - checking profile sync`)
-
         // Check if profile is synced
         const { data: verification } = await supabase.rpc('verify_email_confirmation', {
           user_id: user.id
@@ -55,10 +41,8 @@ export default function VerifyEmailPage() {
 
         if (verification && verification.length > 0) {
           const syncStatus = verification[0]
-          console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] Profile sync status:`, syncStatus)
 
           if (syncStatus.needs_sync) {
-            console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] 🔧 Syncing profile confirmation status`)
             // The callback route should handle this, but let's try here too
             await supabase
               .from('profiles')
@@ -76,7 +60,6 @@ export default function VerifyEmailPage() {
           canResend: false
         })
       } else {
-        console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] ⏳ Email not yet confirmed`)
         setConfirmationStatus({
           isConfirmed: false,
           message: "Email confirmation is still pending. Please check your inbox and spam folder.",
@@ -84,7 +67,6 @@ export default function VerifyEmailPage() {
         })
       }
     } catch (error) {
-      console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] ❌ Error checking confirmation status:`, error)
       setConfirmationStatus({
         isConfirmed: false,
         message: "Unable to check confirmation status. Please try again.",
@@ -96,9 +78,6 @@ export default function VerifyEmailPage() {
   }
 
   const resendConfirmation = async () => {
-    const timestamp = new Date().toISOString()
-    console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] 📧 Resending confirmation email`)
-
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -109,10 +88,8 @@ export default function VerifyEmailPage() {
       })
 
       if (error) {
-        console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] ❌ Resend failed:`, error)
         alert('Failed to resend confirmation email. Please try again.')
       } else {
-        console.log(`[VERIFY-EMAIL-DEBUG ${timestamp}] ✅ Confirmation email resent`)
         alert('Confirmation email sent! Please check your inbox.')
       }
     }
@@ -129,8 +106,8 @@ export default function VerifyEmailPage() {
         <Card className="border-border bg-card">
           <CardHeader className="text-center">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmationStatus?.isConfirmed
-                ? 'bg-green-100 text-green-600'
-                : 'bg-primary/10 text-primary'
+              ? 'bg-green-100 text-green-600'
+              : 'bg-primary/10 text-primary'
               }`}>
               {confirmationStatus?.isConfirmed ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,12 +148,6 @@ export default function VerifyEmailPage() {
               {confirmationStatus?.message || "Click the link in the email we sent you to verify your account. If you don't see it, check your spam folder."}
             </p>
 
-            {/* Debug info */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-xs text-blue-800 dark:text-blue-200 font-medium text-center">
-                🐛 EMAIL CONFIRMATION DEBUG: Check console (F12) for detailed verification logs
-              </p>
-            </div>
 
             <div className="space-y-2">
               <Button

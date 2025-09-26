@@ -40,7 +40,7 @@ export default function UsersManagementPage() {
         const { data: userData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
         setUsers(userData || [])
       } catch (error) {
-        console.error("Error fetching users:", error)
+        // Handle error silently
       } finally {
         setLoading(false)
       }

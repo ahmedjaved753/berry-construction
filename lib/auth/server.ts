@@ -32,7 +32,6 @@ export async function getServerUserProfile(): Promise<UserProfile | null> {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error("Error fetching user profile:", error);
     return null;
   }
 }
