@@ -109,11 +109,11 @@ export default function MonthlyClient({ snapshot }: MonthlyClientProps) {
 
     const formatCompactCurrency = (amount: number) => {
         if (Math.abs(amount) >= 1000000) {
-            return `$${(amount / 1000000).toFixed(2)}M`;
+            return `£${(amount / 1000000).toFixed(2)}M`;
         } else if (Math.abs(amount) >= 1000) {
-            return `$${(amount / 1000).toFixed(2)}K`;
+            return `£${(amount / 1000).toFixed(2)}K`;
         } else {
-            return `$${amount.toFixed(2)}`;
+            return `£${amount.toFixed(2)}`;
         }
     };
 

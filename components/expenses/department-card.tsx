@@ -11,7 +11,7 @@ import {
     TrendingUp,
     TrendingDown,
     Building2,
-    DollarSign,
+    PoundSterling,
     ArrowRight,
     Eye
 } from "lucide-react";
@@ -52,9 +52,9 @@ export function DepartmentCard({
 }: DepartmentCardProps) {
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-GB', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'GBP',
             minimumFractionDigits: 2
         }).format(amount);
     };
@@ -146,7 +146,7 @@ export function DepartmentCard({
                     {/* Net Profit */}
                     <div className={`text-center p-4 rounded-xl border ${getProfitabilityBgColor(net_profit)}`}>
                         <div className="flex items-center justify-center mb-2">
-                            <DollarSign className={`h-4 w-4 mr-1 ${getProfitabilityColor(net_profit)}`} />
+                            <PoundSterling className={`h-4 w-4 mr-1 ${getProfitabilityColor(net_profit)}`} />
                             <p className={`text-sm font-medium ${getProfitabilityColor(net_profit)}`}>Net</p>
                         </div>
                         <p className={`text-xl font-bold mb-1 ${getProfitabilityColor(net_profit)}`}>

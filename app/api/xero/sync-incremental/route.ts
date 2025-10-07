@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
             total: parseFloat(invoice.Total) || 0,
             sub_total: parseFloat(invoice.SubTotal) || 0,
             total_tax: parseFloat(invoice.TotalTax) || 0,
-            currency_code: invoice.CurrencyCode || "USD",
+            currency_code: invoice.CurrencyCode || "GBP",
             invoice_date: parseDate(invoice.Date),
             due_date: parseDate(invoice.DueDate),
             updated_at: new Date().toISOString(),
