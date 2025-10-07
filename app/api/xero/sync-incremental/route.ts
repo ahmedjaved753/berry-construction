@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Vercel Cron Job Endpoint - Incremental Xero Sync
- * 
- * This endpoint is designed for Vercel Cron (Pro plan):
- * - 60-second timeout (vs 45s on Supabase Edge)
+ * Incremental Xero Sync Endpoint
+ *
+ * This endpoint syncs Xero data incrementally:
+ * - 60-second timeout
  * - Can process ~100-200 invoices per run
  * - Only syncs invoices updated in last 24 hours
- * 
- * Triggered by: vercel.json cron schedule (*/10 * * * *)
+ *
+ * Can be triggered manually or by Supabase cron jobs
  */
 export async function GET(request: NextRequest) {
-  // Verify this is coming from Vercel Cron (security)
+  // Verify request is authorized (security)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   const startTime = Date.now();
-  console.log("🚀 [Vercel Cron] Starting centralized admin Xero sync...");
+  console.log("🚀 [Sync] Starting centralized admin Xero sync...");
 
   try {
     const supabase = await createClient();
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
       }
 
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`✅ [Vercel Cron] Centralized sync completed in ${duration}s`);
+      console.log(`✅ [Sync] Centralized sync completed in ${duration}s`);
 
       return NextResponse.json({
         success: true,
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error("❌ [Vercel Cron] Failed:", error.message);
+    console.error("❌ [Sync] Failed:", error.message);
     return NextResponse.json(
       {
         success: false,
@@ -223,9 +223,9 @@ function parseDate(dateString: any): string | null {
   }
 }
 
-// Required for Vercel Cron
+// Route configuration
 export const runtime = "nodejs"; // Use Node.js runtime for longer timeout
-export const maxDuration = 60; // Maximum 60 seconds on Pro plan
+export const maxDuration = 60; // Maximum 60 seconds
 
 
 
