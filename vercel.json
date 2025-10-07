@@ -1,0 +1,15 @@
+{
+  "crons": [
+    {
+      "path": "/api/xero/sync-incremental",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}
+
+
+
+
+
+
+

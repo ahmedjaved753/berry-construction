@@ -9,14 +9,36 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    // Check for persisted login error (in case page refreshed)
+    const persistedError = localStorage.getItem('loginError')
+    if (persistedError) {
+      setError(persistedError)
+      localStorage.removeItem('loginError')
+    }
+
+    // Check for signup success message
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('signup') === 'success' && urlParams.get('pending') === 'true') {
+      setSuccessMessage("Account created successfully! Please wait for an administrator to activate your account before logging in.")
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (urlParams.get('error') === 'inactive') {
+      setError("Your account is inactive. Please contact an administrator to activate your account.")
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,20 +47,58 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      console.log('🔵 Starting login for:', email)
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
+      console.log('🔵 Login response:', { data: !!data, error })
+
       if (error) throw error
 
-      router.push("/")
+      // Check if user profile is active
+      if (data.user) {
+        console.log('🔵 Checking profile for user:', data.user.id)
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("is_active, role")
+          .eq("id", data.user.id)
+          .single()
+
+        console.log('🔵 Profile check result:', { profile, profileError })
+
+        if (profileError) {
+          console.error('❌ Profile error:', profileError)
+          await supabase.auth.signOut()
+          throw new Error("Unable to verify account status. Please contact an administrator.")
+        }
+
+        if (!profile.is_active) {
+          console.log('⚠️ User is inactive')
+          await supabase.auth.signOut()
+          throw new Error("Your account is inactive. Please contact an administrator to activate your account.")
+        }
+
+        console.log('✅ Login successful, redirecting to /expenses')
+      }
+
+      router.push("/expenses")
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      console.error('❌ Login error:', error)
+      const errorMessage = error instanceof Error ? error.message : "An error occurred"
+
+      // Persist error in case page refreshes
+      localStorage.setItem('loginError', errorMessage)
+
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
@@ -86,6 +146,12 @@ export default function LoginPage() {
                 />
               </div>
 
+              {successMessage && (
+                <div className="p-3 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950 dark:border-green-800">
+                  <p className="text-sm text-green-800 dark:text-green-200 font-medium">{successMessage}</p>
+                </div>
+              )}
+
               {error && (
                 <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                   <p className="text-sm text-destructive font-medium">{error}</p>
@@ -107,6 +173,7 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
 
             <div className="text-center mt-8 pt-6 border-t border-border">
               <p className="text-sm text-muted-foreground">

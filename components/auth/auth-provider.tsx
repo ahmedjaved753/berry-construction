@@ -89,9 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Reset logging out state on sign out
           setIsLoggingOut(false)
 
-          // If this is a SIGNED_OUT event, redirect to login
+          // If this is a SIGNED_OUT event, redirect to login (but only if not already on login/signup pages)
           if (event === 'SIGNED_OUT') {
-            window.location.href = '/auth/login'
+            const currentPath = window.location.pathname
+            if (!currentPath.includes('/auth/')) {
+              window.location.href = '/auth/login'
+            }
           }
         }
       } catch (error) {
@@ -127,7 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   id: userId,
                   email: user.user.email || '',
                   full_name: '',
-                  role: 'user'
+                  role: 'user',
+                  is_active: false
                 })
                 .select()
                 .single()
@@ -149,6 +153,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data) {
         setProfile(null)
+        return
+      }
+
+      // Check if user is inactive - sign them out immediately
+      if (data.is_active === false) {
+        console.log('⚠️ User account is inactive - signing out')
+        setProfile(null)
+        setUser(null)
+        await supabase.auth.signOut()
+
+        // Only redirect if not already on login page
+        const currentPath = window.location.pathname
+        if (!currentPath.includes('/auth/login')) {
+          window.location.href = '/auth/login?error=inactive'
+        }
         return
       }
 

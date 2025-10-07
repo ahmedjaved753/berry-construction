@@ -4,21 +4,73 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuthContext } from "@/components/auth/auth-provider"
 import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import XeroConnectionPrompt from "@/components/integrations/xero-connection-prompt"
 import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
+import {
+  TrendingUp,
+  DollarSign,
+  Users,
+  Calendar,
+  ArrowRight,
+  Plus,
+  BarChart3,
+  CheckCircle
+} from "lucide-react"
+
+interface XeroConnection {
+  id: string
+  org_name?: string
+  tenant_name?: string
+  connected_at: string
+  expires_at: string
+  last_refreshed_at: string
+  is_expired: boolean
+}
+
+interface SyncStatus {
+  connected: boolean
+  lastSync: string | null
+  dataCounts: {
+    invoices: number
+    departments: number
+    stages: number
+    lineItems: number
+  }
+}
+
+// Helper function to get authenticated headers for Edge Function calls
+async function getAuthHeaders() {
+  const supabase = createClient()
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  if (error || !session?.access_token) {
+    throw new Error('Authentication required')
+  }
+
+  return {
+    'Authorization': `Bearer ${session.access_token}`,
+    'Content-Type': 'application/json'
+  }
+}
 
 export default function HomePage() {
   const router = useRouter()
   const { user, profile, loading, profileLoading } = useAuthContext()
   const [loadingTimeout, setLoadingTimeout] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
+  const [xeroConnection, setXeroConnection] = useState<XeroConnection | null>(null)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null)
+  const [connectionLoading, setConnectionLoading] = useState(true)
 
   // Add timeout for auth loading state (not profile loading)
   useEffect(() => {
     if (loading) {
       const timeout = setTimeout(() => {
         setLoadingTimeout(true)
-      }, 10000) // 10 second timeout for auth (reduced from 15s)
+      }, 10000) // 10 second timeout for auth
 
       return () => clearTimeout(timeout)
     } else {
@@ -26,32 +78,75 @@ export default function HomePage() {
     }
   }, [loading])
 
-  const handleForceRefresh = () => {
-    window.location.reload()
-  }
+  // Check Xero connection and sync status when user loads
+  useEffect(() => {
+    if (user && !loading) {
+      checkXeroConnection()
+      checkSyncStatus()
+    }
+  }, [user, loading])
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
   }
 
+  const checkXeroConnection = async () => {
+    if (!user) return
+
+    try {
+      const headers = await getAuthHeaders()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/xero-connection`, {
+        headers
+      })
+      const data = await response.json()
+
+      if (data.connected) {
+        setXeroConnection(data.connection)
+      } else {
+        setXeroConnection(null)
+      }
+    } catch (error) {
+      console.error('Error checking Xero connection:', error)
+    } finally {
+      setConnectionLoading(false)
+    }
+  }
+
+  const checkSyncStatus = async () => {
+    if (!user) return
+
+    try {
+      const headers = await getAuthHeaders()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/xero-sync-manager`, {
+        headers
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setSyncStatus(data)
+      }
+    } catch (error) {
+      console.error('Error checking sync status:', error)
+    }
+  }
+
+  const handleForceRefresh = () => {
+    window.location.reload()
+  }
+
   // OPTIMIZED: Only show loading state for initial auth loading (not profile loading)
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center max-w-md">
-            <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {loadingTimeout ? "Authentication is taking longer than expected..." : "Checking authentication..."}
-            </p>
-
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="space-y-2">
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading your dashboard...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">This should only take a moment</p>
             {loadingTimeout && (
-              <div className="space-y-4">
-                <p className="text-sm text-gray-500 dark:text-gray-500">
-                  This might be an authentication issue. Check the browser console for debug logs.
-                </p>
-                <Button onClick={handleForceRefresh} variant="outline">
-                  🔄 Refresh Page
+              <div className="pt-4 space-y-2">
+                <p className="text-sm text-orange-600 dark:text-orange-400">Taking longer than usual...</p>
+                <Button onClick={handleForceRefresh} variant="outline" size="sm">
+                  Force Refresh
                 </Button>
               </div>
             )}
@@ -61,132 +156,86 @@ export default function HomePage() {
     )
   }
 
-  // If user is not authenticated, show landing page with construction theme
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-        <main className="container mx-auto px-6 py-8 min-h-screen flex items-center justify-center">
-          <div className="max-w-4xl mx-auto">
-            {/* Construction Card for non-authenticated users */}
-            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Berry Construction</h2>
-                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                  Get Started
-                </Button>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="container mx-auto px-4 py-16">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="mb-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <span className="text-white font-bold text-xl">BC</span>
               </div>
+              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
+                Berry Construction
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+                Streamline your construction business with integrated project management and financial insights.
+              </p>
+            </div>
 
-              {/* Construction Progress Illustration */}
-              <div className="text-center py-12">
-                <div className="relative inline-block">
-                  <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl transform rotate-3">
-                    <div className="text-6xl">🚧</div>
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                    <div className="text-white text-lg">⚠️</div>
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
-                  Platform Coming Soon
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
-                  We're building an amazing construction project management platform. Sign up to get early access!
-                </p>
+            <div className="grid gap-6 md:grid-cols-3 mb-12">
+              <Card className="text-left">
+                <CardHeader>
+                  <TrendingUp className="w-8 h-8 text-blue-600 mb-2" />
+                  <CardTitle className="text-lg">Financial Insights</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    Connect your accounting software for real-time financial reporting and project profitability analysis.
+                  </CardDescription>
+                </CardContent>
+              </Card>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button size="lg" className="px-8 bg-gradient-to-r from-purple-600 to-blue-600" onClick={() => router.push("/auth/signup")}>
-                    Get Started
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="px-8"
-                    onClick={() => router.push("/auth/login")}
-                  >
-                    Sign In
-                  </Button>
-                </div>
-              </div>
+              <Card className="text-left">
+                <CardHeader>
+                  <Users className="w-8 h-8 text-green-600 mb-2" />
+                  <CardTitle className="text-lg">Team Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    Manage your construction team, track project progress, and collaborate effectively on all your builds.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card className="text-left">
+                <CardHeader>
+                  <BarChart3 className="w-8 h-8 text-purple-600 mb-2" />
+                  <CardTitle className="text-lg">Project Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>
+                    Get detailed insights into project performance, costs, and timelines to make better business decisions.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-x-4">
+              <Button
+                size="lg"
+                onClick={() => router.push('/auth/signup')}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 rounded-full"
+              >
+                Get Started
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => router.push('/auth/login')}
+                className="px-8 py-3"
+              >
+                Sign In
+              </Button>
             </div>
           </div>
-        </main>
+        </div>
       </div>
     )
   }
 
-  // OPTIMIZED: Always show content when user exists (even during profile loading)
-  return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
-
-      {/* Sidebar for authenticated users */}
-      {user && (
-        <>
-          <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
-          <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
-        </>
-      )}
-
-      {/* Main Content with sidebar spacing */}
-      <main className={`transition-all duration-300 ${user ? 'md:ml-64' : ''} min-h-screen flex items-center justify-center p-6`}>
-        <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto">
-
-            {/* OPTIMIZED: Profile loading indicator */}
-            {profileLoading && (
-              <div className="mb-6 p-4 bg-blue-50/70 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-800/60 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    Loading your profile details...
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* OPTIMIZED: Personal welcome message when profile loads */}
-            {profile && !profileLoading && (
-              <div className="mb-6 p-4 bg-green-50/70 dark:bg-green-900/20 border border-green-200/60 dark:border-green-800/60 rounded-lg">
-                <h1 className="text-lg font-semibold text-green-900 dark:text-green-100">
-                  Welcome back, {profile.full_name || user.email?.split('@')[0] || 'User'}!
-                  {profile.role === 'admin' && (
-                    <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
-                      👑 Admin Access
-                    </span>
-                  )}
-                </h1>
-              </div>
-            )}
-
-            {/* Main Construction Card */}
-            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Projects</h2>
-                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                  View All
-                </Button>
-              </div>
-
-              {/* Construction Progress Illustration */}
-              <div className="text-center py-12">
-                <div className="relative inline-block">
-                  <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl transform rotate-3">
-                    <div className="text-6xl">🚧</div>
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                    <div className="text-white text-lg">⚠️</div>
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
-                  Projects Coming Soon
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                  We're building an amazing project management system for your construction needs.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
+  // Redirect authenticated users to /expenses
+  router.push('/expenses')
+  return null
 }

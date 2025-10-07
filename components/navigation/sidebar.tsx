@@ -62,20 +62,40 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
     // Navigation items based on user role
     const navigationItems = [
-        // Home available to all users
+        // Integrations - Admin only
         {
-            href: "/",
-            label: "Home",
-            icon: "🏠",
-            description: "Dashboard home",
+            href: "/integrations",
+            label: "Integrations",
+            icon: "🔗",
+            description: "Connect your business tools",
+            available: isAdmin
+        },
+        {
+            href: "/expenses",
+            label: "Expenses",
+            icon: "💰",
+            description: "Track department expenses & profitability",
             available: true
         },
-        // Projects available to all users
         {
-            href: "/projects",
-            label: "Projects",
-            icon: "📋",
-            description: "View and manage projects",
+            href: "/expenses/daily",
+            label: "Daily Snapshot",
+            icon: "📅",
+            description: "View finances for any day",
+            available: true
+        },
+        {
+            href: "/expenses/monthly",
+            label: "Monthly Snapshot",
+            icon: "📊",
+            description: "View finances for any month",
+            available: true
+        },
+        {
+            href: "/expenses/yearly",
+            label: "Yearly Snapshot",
+            icon: "📈",
+            description: "View finances for any year",
             available: true
         },
         // Admin-only items
@@ -84,13 +104,6 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             label: "Admin Dashboard",
             icon: "👑",
             description: "Admin panel and settings",
-            available: isAdmin
-        },
-        {
-            href: "/admin-dashboard/users",
-            label: "User Management",
-            icon: "👥",
-            description: "Manage system users",
             available: isAdmin
         }
     ].filter(item => item.available)

@@ -25,3 +25,35 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# MCP Configuration
+.mcp.json
+
+# Supabase local development
+/supabase/
+supabase.toml
+
+# Temporary documentation
+DEBUG_*.md
+VALIDATION_*.md
+MISSING_*.md
+QUICK_START.md
+SCRIPTS_INDEX.md
+XERO_SYNC_README.md
+
+# One-off scripts and verification tools
+scripts/*verify*.ts
+scripts/*test*.ts
+scripts/*check*.ts
+scripts/*validate*.ts
+scripts/*backfill*.ts
+scripts/*fix*.ts
+scripts/*investigate*.ts
+scripts/*sync*.ts
+scripts/*find*.ts
+scripts/*count*.ts
+scripts/*diagnose*.ts
+scripts/*sample*.ts
+scripts/*list*.ts
+scripts/*apply*.js
+scripts/*.md

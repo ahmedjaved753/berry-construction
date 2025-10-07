@@ -102,20 +102,20 @@ export default function SignupPage() {
           // Handle error silently
         }
 
-        // Check if user needs email confirmation
-        if (!data.user.email_confirmed_at && !data.session) {
-          router.push("/auth/verify-email")
-          return
-        }
-
-        // Check if user was immediately logged in
+        // Important: Sign out the user immediately after signup
+        // Users must wait for admin activation before they can login
         if (data.session) {
-          router.push("/")
+          await supabase.auth.signOut()
+        }
+
+        // Check if user needs email confirmation
+        if (!data.user.email_confirmed_at) {
+          router.push("/auth/verify-email?pending=true")
           return
         }
 
-        // Default case - go to verify email
-        router.push("/auth/verify-email")
+        // Redirect to login with pending approval message
+        router.push("/auth/login?signup=success&pending=true")
         return
       }
 
@@ -148,6 +148,7 @@ export default function SignupPage() {
       setIsLoading(false)
     }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
@@ -245,6 +246,7 @@ export default function SignupPage() {
                 )}
               </Button>
             </form>
+
 
             <div className="text-center mt-8 pt-6 border-t border-border">
               <p className="text-sm text-muted-foreground">

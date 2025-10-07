@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams()
   const status = searchParams.get('status')
+  const pending = searchParams.get('pending')
 
 
   const resendConfirmation = async () => {
@@ -51,6 +52,18 @@ export default function VerifyEmailPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Admin activation notice */}
+            {pending === 'true' && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200 text-center font-medium mb-2">
+                  ⏳ Account Pending Activation
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                  After verifying your email, your account will need to be activated by an administrator before you can log in. You'll be notified once your account is activated.
+                </p>
+              </div>
+            )}
+
             {/* Status indicator */}
             {status === 'pending' && (
               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">

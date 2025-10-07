@@ -10,7 +10,17 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+
+interface XeroConnection {
+  id: string
+  org_name?: string
+  tenant_name?: string
+  connected_at: string
+  expires_at: string
+  last_refreshed_at: string
+  is_expired: boolean
+}
 
 export default function ProfilePage() {
   const { user, profile } = useAuthContext()
@@ -18,10 +28,77 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [xeroConnection, setXeroConnection] = useState<XeroConnection | null>(null)
+  const [isConnectingXero, setIsConnectingXero] = useState(false)
+  const [xeroLoading, setXeroLoading] = useState(true)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
+  }
+
+  const checkXeroConnection = async () => {
+    if (!user) return
+
+    try {
+      const response = await fetch('/api/xero/connection')
+      const data = await response.json()
+
+      if (data.connected) {
+        setXeroConnection(data.connection)
+      } else {
+        setXeroConnection(null)
+      }
+    } catch (error) {
+      console.error('Error checking Xero connection:', error)
+    } finally {
+      setXeroLoading(false)
+    }
+  }
+
+  const handleConnectXero = async () => {
+    setIsConnectingXero(true)
+    try {
+      const response = await fetch('/api/xero/connect', {
+        method: 'POST'
+      })
+      const data = await response.json()
+
+      if (data.authUrl) {
+        // Redirect to Xero OAuth
+        window.location.href = data.authUrl
+      } else {
+        setMessage({ type: "error", text: "Failed to initiate Xero connection" })
+      }
+    } catch (error) {
+      console.error('Error connecting to Xero:', error)
+      setMessage({ type: "error", text: "Failed to connect to Xero" })
+    } finally {
+      setIsConnectingXero(false)
+    }
+  }
+
+  const handleDisconnectXero = async () => {
+    if (!confirm('Are you sure you want to disconnect from Xero? You will need to re-authorize to access Xero data again.')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/xero/connection', {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setXeroConnection(null)
+        setMessage({ type: "success", text: "Xero disconnected successfully" })
+      } else {
+        setMessage({ type: "error", text: "Failed to disconnect Xero" })
+      }
+    } catch (error) {
+      console.error('Error disconnecting Xero:', error)
+      setMessage({ type: "error", text: "Failed to disconnect Xero" })
+    }
   }
 
   useEffect(() => {
@@ -33,7 +110,42 @@ export default function ProfilePage() {
     if (profile) {
       setFullName(profile.full_name || "")
     }
-  }, [user, profile, router])
+
+    // Check Xero connection status
+    checkXeroConnection()
+
+    // Handle OAuth callback messages
+    const xeroConnected = searchParams.get('xero_connected')
+    const xeroError = searchParams.get('xero_error')
+
+    if (xeroConnected === 'true') {
+      setMessage({ type: "success", text: "Xero connected successfully!" })
+      // Refresh connection status
+      checkXeroConnection()
+      // Clean up URL
+      router.replace('/profile')
+    }
+
+    if (xeroError) {
+      let errorMessage = "Failed to connect to Xero"
+      switch (xeroError) {
+        case 'access_denied':
+          errorMessage = "Xero authorization was denied"
+          break
+        case 'invalid_state':
+          errorMessage = "Security validation failed. Please try again."
+          break
+        case 'token_exchange_failed':
+          errorMessage = "Failed to complete Xero authorization"
+          break
+        default:
+          errorMessage = `Xero connection error: ${xeroError}`
+      }
+      setMessage({ type: "error", text: errorMessage })
+      // Clean up URL
+      router.replace('/profile')
+    }
+  }, [user, profile, router, searchParams])
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -267,6 +379,128 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Xero Integration Section */}
+            <div className="mt-8">
+              <Card className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 border-gray-200/60 dark:border-gray-700/60">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-lg">🔗</span>
+                    </div>
+                    <div>
+                      <CardTitle className="text-gray-900 dark:text-white">Xero Integration</CardTitle>
+                      <CardDescription className="text-gray-600 dark:text-gray-400">
+                        Connect your Xero account to access financial data
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {xeroLoading ? (
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      Checking connection status...
+                    </div>
+                  ) : xeroConnection ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                          ✅ Connected
+                        </Badge>
+                        {xeroConnection.is_expired && (
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
+                            ⚠️ Token Expired
+                          </Badge>
+                        )}
+                      </div>
+
+                      {xeroConnection.org_name && (
+                        <div className="p-4 bg-gray-100/70 dark:bg-gray-700/70 rounded-lg">
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Organization:</span>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                {xeroConnection.org_name}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Connected:</span>
+                              <span className="text-sm text-gray-900 dark:text-white">
+                                {new Date(xeroConnection.connected_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Token Expires:</span>
+                              <span className="text-sm text-gray-900 dark:text-white">
+                                {new Date(xeroConnection.expires_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open('/api/xero/invoices', '_blank')}
+                          className="bg-white/50 hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-gray-200/60 dark:border-gray-700/60"
+                        >
+                          📄 View Invoices
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open('/api/xero/contacts', '_blank')}
+                          className="bg-white/50 hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-gray-200/60 dark:border-gray-700/60"
+                        >
+                          👥 View Contacts
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDisconnectXero}
+                          className="ml-auto"
+                        >
+                          🔌 Disconnect
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Connect your Xero account to automatically sync invoices, contacts, and other financial data.
+                      </p>
+
+                      <div className="p-4 bg-blue-50/70 dark:bg-blue-900/20 rounded-lg border border-blue-200/60 dark:border-blue-800/60">
+                        <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                          🔐 Secure Integration
+                        </h4>
+                        <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+                          <li>• Read-only access to your Xero data</li>
+                          <li>• Encrypted token storage</li>
+                          <li>• Automatic token refresh</li>
+                          <li>• Disconnect anytime</li>
+                        </ul>
+                      </div>
+
+                      <Button
+                        onClick={handleConnectXero}
+                        disabled={isConnectingXero}
+                        className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white"
+                      >
+                        {isConnectingXero ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Connecting...
+                          </div>
+                        ) : (
+                          "🔗 Connect to Xero"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
