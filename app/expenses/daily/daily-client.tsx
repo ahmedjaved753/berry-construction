@@ -248,13 +248,13 @@ export default function DailyClient({ snapshot }: DailyClientProps) {
                             value={statusFilter}
                             onValueChange={handleStatusFilterChange}
                         >
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-[200px]">
                                 <Receipt className="h-4 w-4 mr-2" />
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="paid_authorized">
-                                    Paid & Authorized
+                                    Paid & Approved
                                 </SelectItem>
                                 <SelectItem value="paid">Paid Only</SelectItem>
                             </SelectContent>

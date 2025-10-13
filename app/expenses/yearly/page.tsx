@@ -59,9 +59,9 @@ async function fetchYearlySnapshot(
     const invoiceStatuses =
         statusFilter === "paid" ? ["PAID"] : ["PAID", "AUTHORISED"];
 
-    // Calculate year start and end dates
-    const yearStart = `${year}-01-01`;
-    const yearEnd = `${year + 1}-01-01`;
+    // Calculate financial year start and end dates (April 1 - March 31)
+    const yearStart = `${year}-04-01`;
+    const yearEnd = `${year + 1}-04-01`;
 
     // 1. Query invoices for specific year
     const { data: invoices, error: invoicesError } = await supabase
@@ -228,11 +228,17 @@ export default async function YearlySnapshotPage({
         redirect("/auth/login");
     }
 
-    // Get year from searchParams or default to current year
+    // Get year from searchParams or default to current financial year
+    // Financial year runs April 1 - March 31
     const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11 (0 = January)
+    const currentYear = now.getFullYear();
+    // If we're in Jan-Mar, we're still in the previous financial year
+    const defaultFinancialYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+
     const selectedYear = searchParams.year
         ? parseInt(searchParams.year)
-        : now.getFullYear();
+        : defaultFinancialYear;
     const statusFilter = searchParams.status || "paid_authorized";
 
     // Fetch yearly snapshot

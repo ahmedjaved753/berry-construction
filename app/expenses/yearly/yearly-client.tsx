@@ -22,7 +22,7 @@ import {
     Calendar as CalendarIcon,
     TrendingUp,
     TrendingDown,
-    DollarSign,
+    PoundSterling,
     Receipt,
     FileText,
     Building2,
@@ -84,9 +84,9 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("en-US", {
+        return new Intl.NumberFormat("en-GB", {
             style: "currency",
-            currency: "USD",
+            currency: "GBP",
             minimumFractionDigits: 2,
         }).format(amount);
     };
@@ -113,9 +113,16 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
         router.push(`/expenses/yearly?${params.toString()}`);
     };
 
-    // Generate year options (current year and 10 years back)
-    const currentYear = new Date().getFullYear();
-    const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - i);
+    // Generate financial year options (current financial year and 10 years back)
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11
+    const currentYear = now.getFullYear();
+    // If we're in Jan-Mar, we're still in the previous financial year
+    const currentFinancialYear = currentMonth < 3 ? currentYear - 1 : currentYear;
+    const yearOptions = Array.from({ length: 11 }, (_, i) => currentFinancialYear - i);
+
+    // Helper function to format financial year display
+    const formatFinancialYear = (year: number) => `${year}/${year + 1}`;
 
     const incomeInvoices = snapshot.invoices.filter(
         (inv) => inv.type === "ACCREC"
@@ -154,14 +161,14 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                 value={snapshot.year.toString()}
                                 onValueChange={handleYearChange}
                             >
-                                <SelectTrigger className="w-[120px]">
+                                <SelectTrigger className="w-[180px]">
                                     <CalendarIcon className="h-4 w-4 mr-2" />
                                     <SelectValue placeholder="Year" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {yearOptions.map((year) => (
                                         <SelectItem key={year} value={year.toString()}>
-                                            {year}
+                                            {formatFinancialYear(year)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -172,13 +179,13 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                 value={statusFilter}
                                 onValueChange={handleStatusFilterChange}
                             >
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-[200px]">
                                     <Receipt className="h-4 w-4 mr-2" />
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="paid_authorized">
-                                        Paid & Authorized
+                                        Paid & Approved
                                     </SelectItem>
                                     <SelectItem value="paid">Paid Only</SelectItem>
                                 </SelectContent>
@@ -283,7 +290,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                 : "bg-orange-500"
                                         }`}
                                     >
-                                        <DollarSign className="w-7 h-7 text-white" />
+                                        <PoundSterling className="w-7 h-7 text-white" />
                                     </div>
                                 </div>
                             </CardContent>
@@ -294,7 +301,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                     <div className="flex items-center gap-3 text-slate-600">
                         <FileText className="w-5 h-5" />
                         <span className="font-medium">
-                            {snapshot.year}: {snapshot.summary.invoice_count} Invoice
+                            FY {formatFinancialYear(snapshot.year)}: {snapshot.summary.invoice_count} Invoice
                             {snapshot.summary.invoice_count !== 1 ? "s" : ""} |{" "}
                             {snapshot.summary.line_item_count} Line Item
                             {snapshot.summary.line_item_count !== 1 ? "s" : ""}
@@ -310,7 +317,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                     No invoices found
                                 </h3>
                                 <p className="text-slate-500">
-                                    There are no invoices for {snapshot.year}
+                                    There are no invoices for FY {formatFinancialYear(snapshot.year)}
                                 </p>
                             </CardContent>
                         </Card>

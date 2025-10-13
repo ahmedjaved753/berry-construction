@@ -197,12 +197,12 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                     <div className="flex items-center gap-2 flex-wrap">
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-[200px]">
                                 <Receipt className="h-4 w-4 mr-2" />
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="paid_authorized">Paid & Authorized</SelectItem>
+                                <SelectItem value="paid_authorized">Paid & Approved</SelectItem>
                                 <SelectItem value="paid">Paid Only</SelectItem>
                             </SelectContent>
                         </Select>

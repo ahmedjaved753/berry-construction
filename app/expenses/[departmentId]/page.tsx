@@ -13,7 +13,7 @@ import {
     Building2,
     Calendar,
     Calculator,
-    DollarSign,
+    PoundSterling,
     FileText,
     TrendingUp,
     TrendingDown,
@@ -276,9 +276,9 @@ export default function DepartmentDetailPage() {
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-GB', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'GBP',
             minimumFractionDigits: 2
         }).format(amount);
     };
@@ -449,7 +449,7 @@ export default function DepartmentDetailPage() {
                         }`}>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-2">
-                                <DollarSign className={`h-6 w-6 ${netProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                                <PoundSterling className={`h-6 w-6 ${netProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
                                 <span className={`text-sm font-medium ${netProfit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
                                     Net Profit
                                 </span>
@@ -542,7 +542,7 @@ export default function DepartmentDetailPage() {
                                                     Qty: {item.quantity}
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <DollarSign className="h-3 w-3 mr-1" />
+                                                    <PoundSterling className="h-3 w-3 mr-1" />
                                                     Unit: {formatCurrency(item.unit_amount)}
                                                 </div>
                                                 <div className="flex items-center">
