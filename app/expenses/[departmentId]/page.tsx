@@ -28,7 +28,10 @@ import {
     Pencil,
     AlertTriangle,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Wallet,
+    AlertCircle,
+    DollarSign
 } from "lucide-react";
 
 interface DepartmentInfo {
@@ -46,6 +49,11 @@ interface InvoiceSummary {
     expense_invoices: number;
     total_income: number;
     total_expenses: number;
+    expenses_excl_overheads: number;
+    overheads: number;
+    unassigned_bills: number;
+    gross_profit: number;
+    net_profit: number;
     total_line_items: number;
     latest_invoice_date: string;
     earliest_invoice_date: string;
@@ -438,8 +446,6 @@ export default function DepartmentDetailPage() {
         );
     }
 
-    const netProfit = (invoiceSummary?.total_income || 0) - (invoiceSummary?.total_expenses || 0);
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
             <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
@@ -482,14 +488,17 @@ export default function DepartmentDetailPage() {
                     <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full w-32"></div>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                {/* Summary Cards - 6 cards in 2 rows */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Row 1: Total Income, Total Expenses (excl. overheads), Gross Profit */}
+
+                    {/* Total Income - Clickable link to income detail page */}
                     <Link href={`/departmentincome/${departmentId}`} className="block group">
                         <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105">
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-2">
                                     <TrendingUp className="h-6 w-6 text-emerald-600" />
-                                    <span className="text-sm font-medium text-emerald-700">Income</span>
+                                    <span className="text-sm font-medium text-emerald-700">Total Income</span>
                                 </div>
                                 <p className="text-2xl font-bold text-emerald-600 mb-1">
                                     {formatCurrency(invoiceSummary?.total_income || 0)}
@@ -504,55 +513,104 @@ export default function DepartmentDetailPage() {
                         </Card>
                     </Link>
 
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-red-50 to-red-100 hover:shadow-2xl transition-all duration-300">
+                    {/* Total Expenses (excl. overheads) */}
+                    <Card className="border-0 shadow-xl bg-gradient-to-br from-rose-50 to-red-50 hover:shadow-2xl transition-all duration-300">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-2">
-                                <TrendingDown className="h-6 w-6 text-red-600" />
-                                <span className="text-sm font-medium text-red-700">Expenses</span>
+                                <TrendingDown className="h-6 w-6 text-rose-600" />
+                                <span className="text-sm font-medium text-rose-700">Total Expenses</span>
                             </div>
-                            <p className="text-2xl font-bold text-red-600 mb-1">
-                                {formatCurrency(invoiceSummary?.total_expenses || 0)}
+                            <p className="text-2xl font-bold text-rose-600 mb-1">
+                                {formatCurrency(invoiceSummary?.expenses_excl_overheads || 0)}
                             </p>
-                            <p className="text-sm text-red-700">
-                                {invoiceSummary?.expense_invoices || 0} invoices
+                            <p className="text-sm text-rose-700">
+                                Excludes overheads
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ${netProfit >= 0
-                        ? 'bg-gradient-to-br from-blue-50 to-blue-100'
-                        : 'bg-gradient-to-br from-orange-50 to-orange-100'
+                    {/* Gross Profit */}
+                    <Card className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ${(invoiceSummary?.gross_profit || 0) >= 0
+                        ? 'bg-gradient-to-br from-blue-50 to-cyan-50'
+                        : 'bg-gradient-to-br from-orange-50 to-amber-50'
                         }`}>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-2">
-                                <PoundSterling className={`h-6 w-6 ${netProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
-                                <span className={`text-sm font-medium ${netProfit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                                    Net Profit
+                                <BarChart3 className={`h-6 w-6 ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                                <span className={`text-sm font-medium ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                                    Gross Profit
                                 </span>
                             </div>
-                            <p className={`text-2xl font-bold mb-1 ${netProfit >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                                {formatCurrency(netProfit)}
+                            <p className={`text-2xl font-bold mb-1 ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                {(invoiceSummary?.gross_profit || 0) >= 0 ? '' : '-'}
+                                {formatCurrency(Math.abs(invoiceSummary?.gross_profit || 0))}
                             </p>
-                            <p className={`text-sm ${netProfit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                                {netProfit >= 0 ? 'Profitable' : 'Loss'}
+                            <p className={`text-sm ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                                Income - Expenses (excl. overheads)
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-2xl transition-all duration-300">
+                    {/* Row 2: Overheads, Net Profit, Unassigned Bills */}
+
+                    {/* Overheads */}
+                    <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-violet-50 hover:shadow-2xl transition-all duration-300">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-2">
-                                <Package className="h-6 w-6 text-purple-600" />
-                                <span className="text-sm font-medium text-purple-700">Line Items</span>
+                                <Wallet className="h-6 w-6 text-purple-600" />
+                                <span className="text-sm font-medium text-purple-700">Overheads</span>
                             </div>
                             <p className="text-2xl font-bold text-purple-600 mb-1">
-                                {invoiceSummary?.total_line_items || 0}
+                                {formatCurrency(invoiceSummary?.overheads || 0)}
                             </p>
                             <p className="text-sm text-purple-700">
-                                Total items
+                                Stage: 21 - Overheads
                             </p>
                         </CardContent>
                     </Card>
+
+                    {/* Net Profit */}
+                    <Card className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ${(invoiceSummary?.net_profit || 0) >= 0
+                        ? 'bg-gradient-to-br from-indigo-50 to-blue-50'
+                        : 'bg-gradient-to-br from-red-50 to-pink-50'
+                        }`}>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <DollarSign className={`h-6 w-6 ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-600' : 'text-red-600'}`} />
+                                <span className={`text-sm font-medium ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-700' : 'text-red-700'}`}>
+                                    Net Profit
+                                </span>
+                            </div>
+                            <p className={`text-2xl font-bold mb-1 ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
+                                {(invoiceSummary?.net_profit || 0) >= 0 ? '' : '-'}
+                                {formatCurrency(Math.abs(invoiceSummary?.net_profit || 0))}
+                            </p>
+                            <p className={`text-sm ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-700' : 'text-red-700'}`}>
+                                {(invoiceSummary?.net_profit || 0) >= 0 ? 'Profit' : 'Loss'} after overheads
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Unassigned Bills - Clickable link to unassigned bills page */}
+                    <Link href={`/unassignedbills/${departmentId}`} className="block group">
+                        <Card className="border-0 shadow-xl bg-gradient-to-br from-amber-50 to-yellow-50 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <AlertCircle className="h-6 w-6 text-amber-600" />
+                                    <span className="text-sm font-medium text-amber-700">Unassigned Bills</span>
+                                </div>
+                                <p className="text-2xl font-bold text-amber-600 mb-1">
+                                    {formatCurrency(invoiceSummary?.unassigned_bills || 0)}
+                                </p>
+                                <p className="text-sm text-amber-700">
+                                    Missing stage assignment
+                                </p>
+                                <p className="text-xs text-amber-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Click to view details →
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 </div>
 
                 {/* Stages Breakdown */}

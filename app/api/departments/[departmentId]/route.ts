@@ -186,17 +186,6 @@ export async function GET(
       .filter((date) => date)
       .sort();
 
-    const summary = {
-      total_invoices: incomeInvoices + expenseInvoices,
-      income_invoices: incomeInvoices,
-      expense_invoices: expenseInvoices,
-      total_income: totalIncome,
-      total_expenses: totalExpenses,
-      total_line_items: processedLineItems.length,
-      latest_invoice_date: dates[dates.length - 1] || "",
-      earliest_invoice_date: dates[0] || "",
-    };
-
     // Build stage breakdown with budget data
     const stageMap = new Map<string, any>();
 
@@ -225,6 +214,40 @@ export async function GET(
     });
 
     const stageBreakdown = Array.from(stageMap.values());
+
+    // Calculate overheads (expenses from stage "21 - Overheads")
+    const overheads = stageBreakdown
+      .filter((stage) => stage.stage_name === "21 - Overheads")
+      .reduce((sum, stage) => sum + stage.expenses, 0);
+
+    // Calculate expenses excluding overheads
+    const expensesExclOverheads = totalExpenses - overheads;
+
+    // Calculate unassigned bills (ACCPAY items without stage_id)
+    const unassignedBills = processedLineItems
+      .filter((item) => item.invoice_type === "ACCPAY" && !item.stage_id)
+      .reduce((sum, item) => sum + item.line_amount, 0);
+
+    // Calculate gross profit and net profit
+    const grossProfit = totalIncome - expensesExclOverheads;
+    const netProfit = grossProfit - overheads;
+
+    // Create summary with all metrics
+    const summary = {
+      total_invoices: incomeInvoices + expenseInvoices,
+      income_invoices: incomeInvoices,
+      expense_invoices: expenseInvoices,
+      total_income: totalIncome,
+      total_expenses: totalExpenses,
+      expenses_excl_overheads: expensesExclOverheads,
+      overheads: overheads,
+      unassigned_bills: unassignedBills,
+      gross_profit: grossProfit,
+      net_profit: netProfit,
+      total_line_items: processedLineItems.length,
+      latest_invoice_date: dates[dates.length - 1] || "",
+      earliest_invoice_date: dates[0] || "",
+    };
 
     // Fetch detailed invoice information for each stage with xero_invoice_id
     const { data: stageInvoiceData, error: invoiceError } = await supabase

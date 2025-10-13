@@ -34,6 +34,8 @@ import {
     Check,
     ChevronDown,
     Receipt,
+    Wallet,
+    AlertCircle,
 } from "lucide-react";
 
 interface DepartmentExpense {
@@ -43,6 +45,10 @@ interface DepartmentExpense {
     total_invoices: number;
     income_received: number;
     expenses_spent: number;
+    expenses_excl_overheads: number;
+    overheads: number;
+    unassigned_bills: number;
+    gross_profit: number;
     net_profit: number;
     latest_activity: string | null;
     income_invoices: number;
@@ -61,7 +67,11 @@ interface DepartmentExpense {
 interface OverallStats {
     totalIncome: number;
     totalExpenses: number;
-    netTotal: number;
+    totalExpensesExclOverheads: number;
+    totalOverheads: number;
+    totalUnassignedBills: number;
+    grossProfit: number;
+    netProfit: number;
     totalDepartments: number;
     totalInvoices: number;
 }
@@ -130,10 +140,19 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
     const filteredStats = useMemo(() => {
         const totalIncome = filteredDepartments.reduce((sum, d) => sum + d.income_received, 0);
         const totalExpenses = filteredDepartments.reduce((sum, d) => sum + d.expenses_spent, 0);
+        const totalExpensesExclOverheads = filteredDepartments.reduce((sum, d) => sum + d.expenses_excl_overheads, 0);
+        const totalOverheads = filteredDepartments.reduce((sum, d) => sum + d.overheads, 0);
+        const totalUnassignedBills = filteredDepartments.reduce((sum, d) => sum + d.unassigned_bills, 0);
+        const grossProfit = totalIncome - totalExpensesExclOverheads;
+        const netProfit = grossProfit - totalOverheads;
         return {
             totalIncome,
             totalExpenses,
-            netTotal: totalIncome - totalExpenses,
+            totalExpensesExclOverheads,
+            totalOverheads,
+            totalUnassignedBills,
+            grossProfit,
+            netProfit,
             totalDepartments: filteredDepartments.length,
             totalInvoices: filteredDepartments.reduce((sum, d) => sum + d.total_invoices, 0),
         };
@@ -291,8 +310,10 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                     </div>
                 </div>
 
-                {/* Overall Stats Cards */}
+                {/* Overall Stats Cards - 6 cards in 2 rows */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Row 1: Total Income, Total Expenses (excl. overheads), Gross Profit */}
+
                     {/* Total Income */}
                     <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                         <CardContent className="p-6">
@@ -313,17 +334,17 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                         </CardContent>
                     </Card>
 
-                    {/* Total Expenses */}
+                    {/* Total Expenses (excl. overheads) */}
                     <Card className="bg-gradient-to-br from-rose-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-rose-700 mb-2">TOTAL EXPENSES</p>
                                     <p className="text-3xl font-bold text-rose-900">
-                                        {formatCompactCurrency(filteredStats.totalExpenses)}
+                                        {formatCompactCurrency(filteredStats.totalExpensesExclOverheads)}
                                     </p>
                                     <p className="text-xs text-rose-600 mt-2">
-                                        {filteredStats.totalInvoices} total invoices
+                                        Excludes overheads
                                     </p>
                                 </div>
                                 <div className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center">
@@ -333,10 +354,10 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                         </CardContent>
                     </Card>
 
-                    {/* Net Total */}
+                    {/* Gross Profit */}
                     <Card
-                        className={`bg-gradient-to-br ${filteredStats.netTotal >= 0
-                                ? "from-blue-50 to-indigo-50"
+                        className={`bg-gradient-to-br ${filteredStats.grossProfit >= 0
+                                ? "from-blue-50 to-cyan-50"
                                 : "from-orange-50 to-amber-50"
                             } border-0 shadow-lg hover:shadow-xl transition-all duration-300`}
                     >
@@ -344,30 +365,112 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p
-                                        className={`text-sm font-medium mb-2 ${filteredStats.netTotal >= 0 ? "text-blue-700" : "text-orange-700"
+                                        className={`text-sm font-medium mb-2 ${filteredStats.grossProfit >= 0 ? "text-blue-700" : "text-orange-700"
                                             }`}
                                     >
-                                        NET TOTAL
+                                        GROSS PROFIT
                                     </p>
                                     <p
-                                        className={`text-3xl font-bold ${filteredStats.netTotal >= 0 ? "text-blue-900" : "text-orange-900"
+                                        className={`text-3xl font-bold ${filteredStats.grossProfit >= 0 ? "text-blue-900" : "text-orange-900"
                                             }`}
                                     >
-                                        {filteredStats.netTotal >= 0 ? "" : "-"}
-                                        {formatCompactCurrency(Math.abs(filteredStats.netTotal))}
+                                        {filteredStats.grossProfit >= 0 ? "" : "-"}
+                                        {formatCompactCurrency(Math.abs(filteredStats.grossProfit))}
                                     </p>
                                     <p
-                                        className={`text-xs mt-2 ${filteredStats.netTotal >= 0 ? "text-blue-600" : "text-orange-600"
+                                        className={`text-xs mt-2 ${filteredStats.grossProfit >= 0 ? "text-blue-600" : "text-orange-600"
                                             }`}
                                     >
-                                        {filteredStats.netTotal >= 0 ? "Profit" : "Loss"}
+                                        Income - Expenses (excl. overheads)
                                     </p>
                                 </div>
                                 <div
-                                    className={`w-14 h-14 rounded-2xl flex items-center justify-center ${filteredStats.netTotal >= 0 ? "bg-blue-500" : "bg-orange-500"
+                                    className={`w-14 h-14 rounded-2xl flex items-center justify-center ${filteredStats.grossProfit >= 0 ? "bg-blue-500" : "bg-orange-500"
+                                        }`}
+                                >
+                                    <BarChart3 className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Row 2: Overheads, Net Profit, Unassigned Bills */}
+
+                    {/* Overheads */}
+                    <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-purple-700 mb-2">OVERHEADS</p>
+                                    <p className="text-3xl font-bold text-purple-900">
+                                        {formatCompactCurrency(filteredStats.totalOverheads)}
+                                    </p>
+                                    <p className="text-xs text-purple-600 mt-2">
+                                        Stage: 21 - Overheads
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center">
+                                    <Wallet className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Net Profit */}
+                    <Card
+                        className={`bg-gradient-to-br ${filteredStats.netProfit >= 0
+                                ? "from-indigo-50 to-blue-50"
+                                : "from-red-50 to-pink-50"
+                            } border-0 shadow-lg hover:shadow-xl transition-all duration-300`}
+                    >
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p
+                                        className={`text-sm font-medium mb-2 ${filteredStats.netProfit >= 0 ? "text-indigo-700" : "text-red-700"
+                                            }`}
+                                    >
+                                        NET PROFIT
+                                    </p>
+                                    <p
+                                        className={`text-3xl font-bold ${filteredStats.netProfit >= 0 ? "text-indigo-900" : "text-red-900"
+                                            }`}
+                                    >
+                                        {filteredStats.netProfit >= 0 ? "" : "-"}
+                                        {formatCompactCurrency(Math.abs(filteredStats.netProfit))}
+                                    </p>
+                                    <p
+                                        className={`text-xs mt-2 ${filteredStats.netProfit >= 0 ? "text-indigo-600" : "text-red-600"
+                                            }`}
+                                    >
+                                        {filteredStats.netProfit >= 0 ? "Profit" : "Loss"} after overheads
+                                    </p>
+                                </div>
+                                <div
+                                    className={`w-14 h-14 rounded-2xl flex items-center justify-center ${filteredStats.netProfit >= 0 ? "bg-indigo-500" : "bg-red-500"
                                         }`}
                                 >
                                     <DollarSign className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Unassigned Bills */}
+                    <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-amber-700 mb-2">UNASSIGNED BILLS</p>
+                                    <p className="text-3xl font-bold text-amber-900">
+                                        {formatCompactCurrency(filteredStats.totalUnassignedBills)}
+                                    </p>
+                                    <p className="text-xs text-amber-600 mt-2">
+                                        Missing department or stage
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center">
+                                    <AlertCircle className="w-7 h-7 text-white" />
                                 </div>
                             </div>
                         </CardContent>

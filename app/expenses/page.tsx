@@ -10,7 +10,11 @@ interface DepartmentExpense {
     total_invoices: number;
     income_received: number;
     expenses_spent: number;
+    expenses_excl_overheads: number;
+    overheads: number;
+    unassigned_bills: number;
     net_profit: number;
+    gross_profit: number;
     latest_activity: string | null;
     income_invoices: number;
     expense_invoices: number;
@@ -134,18 +138,81 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
             }
         });
 
+        // Fetch unassigned bills (missing department or stage)
+        const { data: unassignedItems, error: unassignedError } = await supabase
+            .from("invoice_line_items")
+            .select(`
+                id,
+                department_id,
+                stage_id,
+                line_amount,
+                invoices!inner (
+                    type,
+                    status
+                )
+            `)
+            .in("invoices.status", invoiceStatuses)
+            .eq("invoices.type", "ACCPAY")
+            .or("department_id.is.null,stage_id.is.null");
+
+        if (unassignedError) {
+            console.error("❌ [SERVER] Error fetching unassigned bills:", unassignedError);
+        }
+
+        console.log(`✅ [SERVER] Found ${unassignedItems?.length || 0} unassigned line items`);
+
+        // Calculate unassigned bills by department
+        const unassignedByDept = new Map<string, number>();
+        let totalUnassignedWithoutDept = 0;
+
+        unassignedItems?.forEach((item: any) => {
+            const amount = parseFloat(item.line_amount) || 0;
+            if (item.department_id) {
+                const current = unassignedByDept.get(item.department_id) || 0;
+                unassignedByDept.set(item.department_id, current + amount);
+            } else {
+                totalUnassignedWithoutDept += amount;
+            }
+        });
+
         // Combine summary data with stages
         const result: DepartmentExpense[] = (departmentSummaries || []).map((summary: any) => {
             const stages = stageMap.get(summary.department_id);
+            const income = parseFloat(summary.income_received) || 0;
+            const totalExpenses = parseFloat(summary.expenses_spent) || 0;
+
+            // Calculate overheads (bills in stage "21 - Overheads")
+            let overheads = 0;
+            if (stages) {
+                Array.from(stages.values()).forEach((stage) => {
+                    if (stage.stage_name === "21 - Overheads") {
+                        overheads += stage.stage_total_spent;
+                    }
+                });
+            }
+
+            // Calculate expenses excluding overheads
+            const expensesExclOverheads = totalExpenses - overheads;
+
+            // Calculate gross profit and net profit
+            const grossProfit = income - expensesExclOverheads;
+            const netProfit = grossProfit - overheads;
+
+            // Get unassigned bills for this department
+            const unassignedBills = unassignedByDept.get(summary.department_id) || 0;
 
             return {
                 department_name: summary.department_name,
                 department_id: summary.department_id,
                 department_status: summary.department_status,
                 total_invoices: summary.total_invoices || 0,
-                income_received: parseFloat(summary.income_received) || 0,
-                expenses_spent: parseFloat(summary.expenses_spent) || 0,
-                net_profit: parseFloat(summary.net_profit) || 0,
+                income_received: income,
+                expenses_spent: totalExpenses,
+                expenses_excl_overheads: expensesExclOverheads,
+                overheads: overheads,
+                unassigned_bills: unassignedBills,
+                gross_profit: grossProfit,
+                net_profit: netProfit,
                 latest_activity: summary.latest_activity,
                 income_invoices: summary.income_invoices || 0,
                 expense_invoices: summary.expense_invoices || 0,
@@ -230,6 +297,10 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
             total_invoices: 0,
             income_received: 0,
             expenses_spent: 0,
+            expenses_excl_overheads: 0,
+            overheads: 0,
+            unassigned_bills: 0,
+            gross_profit: 0,
             net_profit: 0,
             latest_activity: null,
             income_invoices: 0,
@@ -331,10 +402,31 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
         }
     });
 
-    // Add stages to departments
+    // Add stages to departments and calculate detailed metrics
     stageMap.forEach((stages, deptId) => {
         const dept = departmentMap.get(deptId);
         if (dept) {
+            // Calculate overheads (bills in stage "21 - Overheads")
+            let overheads = 0;
+            Array.from(stages.values()).forEach((stage) => {
+                if (stage.stage_name === "21 - Overheads") {
+                    overheads += stage.stage_total_spent;
+                }
+            });
+
+            // Calculate expenses excluding overheads
+            const expensesExclOverheads = dept.expenses_spent - overheads;
+
+            // Calculate gross profit and net profit
+            const grossProfit = dept.income_received - expensesExclOverheads;
+            const netProfit = grossProfit - overheads;
+
+            // Update department with new metrics
+            dept.expenses_excl_overheads = expensesExclOverheads;
+            dept.overheads = overheads;
+            dept.gross_profit = grossProfit;
+            dept.net_profit = netProfit;
+
             dept.stages = Array.from(stages.values()).map((stage) => {
                 const budgetKey = `${deptId}:${stage.stage_id}`;
                 return {
@@ -345,6 +437,27 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
                         : 0,
                 };
             });
+        }
+    });
+
+    // Calculate unassigned bills for direct query path
+    const unassignedByDeptDirect = new Map<string, number>();
+    lineItems?.forEach((item: any) => {
+        // Check if this is an ACCPAY bill that's unassigned
+        if (item.invoices?.type === "ACCPAY" && (!item.department_id || !item.stage_id)) {
+            const amount = parseFloat(item.line_amount) || 0;
+            if (item.department_id) {
+                const current = unassignedByDeptDirect.get(item.department_id) || 0;
+                unassignedByDeptDirect.set(item.department_id, current + amount);
+            }
+        }
+    });
+
+    // Add unassigned bills to departments
+    unassignedByDeptDirect.forEach((amount, deptId) => {
+        const dept = departmentMap.get(deptId);
+        if (dept) {
+            dept.unassigned_bills = amount;
         }
     });
 
@@ -387,12 +500,20 @@ export default async function ExpensesPage({
     // Calculate overall totals
     const totalIncome = departments.reduce((sum, d) => sum + d.income_received, 0);
     const totalExpenses = departments.reduce((sum, d) => sum + d.expenses_spent, 0);
-    const netTotal = totalIncome - totalExpenses;
+    const totalExpensesExclOverheads = departments.reduce((sum, d) => sum + d.expenses_excl_overheads, 0);
+    const totalOverheads = departments.reduce((sum, d) => sum + d.overheads, 0);
+    const totalUnassignedBills = departments.reduce((sum, d) => sum + d.unassigned_bills, 0);
+    const grossProfit = totalIncome - totalExpensesExclOverheads;
+    const netProfit = grossProfit - totalOverheads;
 
     const overallStats = {
         totalIncome,
         totalExpenses,
-        netTotal,
+        totalExpensesExclOverheads,
+        totalOverheads,
+        totalUnassignedBills,
+        grossProfit,
+        netProfit,
         totalDepartments: departments.length,
         totalInvoices: departments.reduce((sum, d) => sum + d.total_invoices, 0),
     };
