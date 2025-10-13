@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { BudgetEditDialog } from "./budget-edit-dialog";
 import {
     Calendar,
     Calculator,
@@ -13,7 +16,9 @@ import {
     Building2,
     PoundSterling,
     ArrowRight,
-    Eye
+    Eye,
+    Pencil,
+    AlertTriangle
 } from "lucide-react";
 
 interface Stage {
@@ -21,6 +26,7 @@ interface Stage {
     stage_id: string;
     line_items_count: number;
     stage_total_spent: number;
+    budgeted_amount: number;
     avg_line_amount: number;
     latest_stage_activity: string;
 }
@@ -50,6 +56,42 @@ export function DepartmentCard({
     expense_invoices,
     stages
 }: DepartmentCardProps) {
+    const router = useRouter();
+    const [editingStage, setEditingStage] = useState<Stage | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleEditBudget = (stage: Stage) => {
+        setEditingStage(stage);
+        setIsDialogOpen(true);
+    };
+
+    const handleSaveBudget = async (amount: number) => {
+        if (!editingStage) return;
+
+        try {
+            const response = await fetch(
+                `/api/departments/${department_id}/stages/${editingStage.stage_id}/budget`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ budgeted_amount: amount }),
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to update budget");
+            }
+
+            // Refresh the page to show updated budget
+            window.location.reload();
+        } catch (error: any) {
+            console.error("Failed to save budget:", error);
+            throw error;
+        }
+    };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-GB', {
@@ -120,7 +162,10 @@ export function DepartmentCard({
                 {/* Financial Overview */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     {/* Income */}
-                    <div className="text-center p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <div
+                        onClick={() => router.push(`/departmentincome/${department_id}`)}
+                        className="text-center p-4 bg-emerald-50 rounded-xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200 group"
+                    >
                         <div className="flex items-center justify-center mb-2">
                             <TrendingUp className="h-4 w-4 text-emerald-600 mr-1" />
                             <p className="text-sm font-medium text-emerald-700">Income</p>
@@ -129,6 +174,9 @@ export function DepartmentCard({
                             {formatCurrency(income_received)}
                         </p>
                         <p className="text-xs text-emerald-600/70">{income_invoices} invoices</p>
+                        <p className="text-xs text-emerald-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            View details →
+                        </p>
                     </div>
 
                     {/* Expenses */}
@@ -186,41 +234,93 @@ export function DepartmentCard({
                             </span>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {stages.map((stage, index) => {
-                                const maxSpent = Math.max(...stages.map(s => s.stage_total_spent));
-                                const widthPercentage = maxSpent > 0 ? (stage.stage_total_spent / maxSpent) * 100 : 0;
+                                const hasBudget = stage.budgeted_amount > 0;
+                                const budgetPercentage = hasBudget
+                                    ? Math.min((stage.stage_total_spent / stage.budgeted_amount) * 100, 150)
+                                    : 0;
+                                const isOverBudget = hasBudget && stage.stage_total_spent > stage.budgeted_amount;
+                                const overBudgetAmount = isOverBudget
+                                    ? stage.stage_total_spent - stage.budgeted_amount
+                                    : 0;
 
                                 return (
                                     <div key={`${stage.stage_id || index}-${stage.stage_name}`} className="relative">
                                         {/* Stage Progress Bar Background */}
-                                        <div className="h-14 bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
+                                        <div className={`h-16 rounded-lg border overflow-hidden ${
+                                            !hasBudget
+                                                ? 'bg-gray-50 border-dashed border-gray-300'
+                                                : isOverBudget
+                                                    ? 'bg-red-50 border-red-200'
+                                                    : 'bg-gray-50 border-gray-200'
+                                        }`}>
                                             {/* Progress Bar */}
-                                            <div
-                                                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 opacity-10 transition-all duration-500"
-                                                style={{ width: `${widthPercentage}%` }}
-                                            />
+                                            {hasBudget && (
+                                                <div
+                                                    className={`h-full transition-all duration-500 ${
+                                                        isOverBudget
+                                                            ? 'bg-gradient-to-r from-red-500 to-red-600'
+                                                            : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                                                    }`}
+                                                    style={{
+                                                        width: `${budgetPercentage}%`,
+                                                        opacity: 0.15
+                                                    }}
+                                                />
+                                            )}
                                         </div>
 
                                         {/* Stage Content */}
                                         <div className="absolute inset-0 flex items-center justify-between p-3">
-                                            <div className="flex-1">
-                                                <p className="font-medium text-gray-900 text-sm mb-1">{stage.stage_name}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="font-medium text-gray-900 text-sm truncate">
+                                                        {stage.stage_name}
+                                                    </p>
+                                                    {isOverBudget && (
+                                                        <AlertTriangle className="h-3 w-3 text-red-600 flex-shrink-0" />
+                                                    )}
+                                                </div>
                                                 <div className="flex items-center text-xs text-gray-500 space-x-2">
                                                     <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                                                         {stage.line_items_count} items
                                                     </span>
-                                                    <span>Avg: {formatCurrency(stage.avg_line_amount)}</span>
+                                                    {hasBudget ? (
+                                                        <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                                                            {budgetPercentage.toFixed(0)}% of budget
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-amber-600 font-medium">No budget set</span>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            <div className="text-right ml-4">
-                                                <p className="font-bold text-gray-900 text-sm">
-                                                    {formatCurrency(stage.stage_total_spent)}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {formatDate(stage.latest_stage_activity)}
-                                                </p>
+                                            <div className="text-right ml-4 flex flex-col items-end gap-1">
+                                                <div className="flex items-center gap-2">
+                                                    <div>
+                                                        <p className={`font-bold text-sm ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
+                                                            {formatCurrency(stage.stage_total_spent)}
+                                                        </p>
+                                                        {hasBudget && (
+                                                            <p className="text-xs text-gray-500">
+                                                                of {formatCurrency(stage.budgeted_amount)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleEditBudget(stage)}
+                                                        className="p-1.5 hover:bg-blue-100 rounded-md transition-colors"
+                                                        title="Edit budget"
+                                                    >
+                                                        <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                                                    </button>
+                                                </div>
+                                                {isOverBudget && (
+                                                    <Badge variant="destructive" className="text-xs">
+                                                        +{formatCurrency(overBudgetAmount)} over
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -230,6 +330,22 @@ export function DepartmentCard({
                     </div>
                 )}
             </CardContent>
+
+            {/* Budget Edit Dialog */}
+            {editingStage && (
+                <BudgetEditDialog
+                    isOpen={isDialogOpen}
+                    onClose={() => {
+                        setIsDialogOpen(false);
+                        setEditingStage(null);
+                    }}
+                    onSave={handleSaveBudget}
+                    currentBudget={editingStage.budgeted_amount}
+                    stageName={editingStage.stage_name}
+                    departmentId={department_id}
+                    stageId={editingStage.stage_id}
+                />
+            )}
         </Card>
     );
 }

@@ -19,6 +19,7 @@ interface DepartmentExpense {
         stage_id: string;
         line_items_count: number;
         stage_total_spent: number;
+        budgeted_amount: number;
         avg_line_amount: number;
         latest_stage_activity: string;
     }[];
@@ -31,6 +32,24 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
 
     // Determine invoice statuses based on filter
     const invoiceStatuses = statusFilter === 'paid' ? ['PAID'] : ['PAID', 'AUTHORISED'];
+
+    // Fetch budget data for all stages
+    const { data: budgetData, error: budgetError } = await supabase
+        .from("budget_summary_stage")
+        .select("department_id, stage_id, budgeted_amount");
+
+    if (budgetError) {
+        console.error("❌ [SERVER] Error fetching budget data:", budgetError);
+    }
+
+    // Create budget lookup map: key = "deptId:stageId", value = budgeted_amount
+    const budgetMap = new Map<string, number>();
+    budgetData?.forEach((budget: any) => {
+        const key = `${budget.department_id}:${budget.stage_id}`;
+        budgetMap.set(key, parseFloat(budget.budgeted_amount) || 0);
+    });
+
+    console.log(`✅ [SERVER] Found ${budgetData?.length || 0} budget entries`);
 
     // If using default filter, use materialized view for performance
     if (statusFilter === 'paid_authorized') {
@@ -131,12 +150,16 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
                 income_invoices: summary.income_invoices || 0,
                 expense_invoices: summary.expense_invoices || 0,
                 stages: stages
-                    ? Array.from(stages.values()).map((stage) => ({
-                        ...stage,
-                        avg_line_amount: stage.line_items_count > 0
-                            ? stage.stage_total_spent / stage.line_items_count
-                            : 0,
-                    }))
+                    ? Array.from(stages.values()).map((stage) => {
+                        const budgetKey = `${summary.department_id}:${stage.stage_id}`;
+                        return {
+                            ...stage,
+                            budgeted_amount: budgetMap.get(budgetKey) || 0,
+                            avg_line_amount: stage.line_items_count > 0
+                                ? stage.stage_total_spent / stage.line_items_count
+                                : 0,
+                        };
+                    })
                     : [],
             };
         });
@@ -312,12 +335,16 @@ async function fetchExpensesSummary(userId: string, statusFilter: string = 'paid
     stageMap.forEach((stages, deptId) => {
         const dept = departmentMap.get(deptId);
         if (dept) {
-            dept.stages = Array.from(stages.values()).map((stage) => ({
-                ...stage,
-                avg_line_amount: stage.line_items_count > 0
-                    ? stage.stage_total_spent / stage.line_items_count
-                    : 0,
-            }));
+            dept.stages = Array.from(stages.values()).map((stage) => {
+                const budgetKey = `${deptId}:${stage.stage_id}`;
+                return {
+                    ...stage,
+                    budgeted_amount: budgetMap.get(budgetKey) || 0,
+                    avg_line_amount: stage.line_items_count > 0
+                        ? stage.stage_total_spent / stage.line_items_count
+                        : 0,
+                };
+            });
         }
     });
 

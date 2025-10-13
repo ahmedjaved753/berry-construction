@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sidebar, SidebarToggle } from "@/components/navigation/sidebar";
+import { BudgetEditDialog } from "@/components/expenses/budget-edit-dialog";
+import { StageInvoiceList } from "@/components/expenses/stage-invoice-list";
 import {
     ArrowLeft,
     Building2,
@@ -21,7 +24,11 @@ import {
     User,
     Package,
     BarChart3,
-    Activity
+    Activity,
+    Pencil,
+    AlertTriangle,
+    ChevronDown,
+    ChevronUp
 } from "lucide-react";
 
 interface DepartmentInfo {
@@ -51,11 +58,29 @@ interface LineItem {
     unit_amount: number;
     line_amount: number;
     tax_amount: number;
+    stage_id: string | null;
     stage_name: string | null;
     invoice_type: string;
     invoice_date: string;
     contact_name: string;
     created_at: string;
+}
+
+interface StageBreakdown {
+    stage_id: string;
+    stage_name: string;
+    expenses: number;
+    income: number;
+    items: number;
+    budgeted_amount: number;
+}
+
+interface StageInvoice {
+    xero_invoice_id: string;
+    contact_name: string;
+    invoice_date: string;
+    line_amount: number;
+    reference: string | null;
 }
 
 export default function DepartmentDetailPage() {
@@ -70,15 +95,65 @@ export default function DepartmentDetailPage() {
     const [departmentInfo, setDepartmentInfo] = useState<DepartmentInfo | null>(null);
     const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummary | null>(null);
     const [lineItems, setLineItems] = useState<LineItem[]>([]);
+    const [stageBreakdown, setStageBreakdown] = useState<StageBreakdown[]>([]);
+    const [stageInvoices, setStageInvoices] = useState<Record<string, StageInvoice[]>>({});
+    const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [editingStage, setEditingStage] = useState<StageBreakdown | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const departmentId = params.departmentId as string;
     const statusFilter = searchParams.get('status') || 'paid_authorized';
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
+    };
+
+    const toggleStageExpanded = (stageId: string) => {
+        setExpandedStages((prev) => {
+            const next = new Set(prev);
+            if (next.has(stageId)) {
+                next.delete(stageId);
+            } else {
+                next.add(stageId);
+            }
+            return next;
+        });
+    };
+
+    const handleEditBudget = (stage: StageBreakdown) => {
+        setEditingStage(stage);
+        setIsDialogOpen(true);
+    };
+
+    const handleSaveBudget = async (amount: number) => {
+        if (!editingStage) return;
+
+        try {
+            const response = await fetch(
+                `/api/departments/${departmentId}/stages/${editingStage.stage_id}/budget`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ budgeted_amount: amount }),
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to update budget");
+            }
+
+            // Refresh the page to show updated budget
+            window.location.reload();
+        } catch (error: any) {
+            console.error("Failed to save budget:", error);
+            throw error;
+        }
     };
 
     // Enhanced logging with component ID
@@ -245,6 +320,24 @@ export default function DepartmentDetailPage() {
                 });
             }
 
+            // Set stage breakdown
+            if (data.stageBreakdown) {
+                log('✅ Setting stage breakdown:', { count: data.stageBreakdown.length });
+                setStageBreakdown(data.stageBreakdown);
+            } else {
+                log('⚠️ No stage breakdown received, setting empty array');
+                setStageBreakdown([]);
+            }
+
+            // Set stage invoices
+            if (data.stageInvoices) {
+                log('✅ Setting stage invoices:', { stagesWithInvoices: Object.keys(data.stageInvoices).length });
+                setStageInvoices(data.stageInvoices);
+            } else {
+                log('⚠️ No stage invoices received, setting empty object');
+                setStageInvoices({});
+            }
+
             // Clear timeout on success
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
@@ -346,28 +439,6 @@ export default function DepartmentDetailPage() {
     }
 
     const netProfit = (invoiceSummary?.total_income || 0) - (invoiceSummary?.total_expenses || 0);
-    const stageBreakdown = lineItems
-        .filter(item => item.stage_name)
-        .reduce((acc, item) => {
-            const stageName = item.stage_name!;
-            if (!acc[stageName]) {
-                acc[stageName] = {
-                    name: stageName,
-                    total: 0,
-                    items: 0,
-                    income: 0,
-                    expenses: 0
-                };
-            }
-            acc[stageName].total += parseFloat(item.line_amount.toString());
-            acc[stageName].items += 1;
-            if (item.invoice_type === 'ACCREC') {
-                acc[stageName].income += parseFloat(item.line_amount.toString());
-            } else {
-                acc[stageName].expenses += parseFloat(item.line_amount.toString());
-            }
-            return acc;
-        }, {} as Record<string, any>);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -413,20 +484,25 @@ export default function DepartmentDetailPage() {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-2xl transition-all duration-300">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <TrendingUp className="h-6 w-6 text-emerald-600" />
-                                <span className="text-sm font-medium text-emerald-700">Income</span>
-                            </div>
-                            <p className="text-2xl font-bold text-emerald-600 mb-1">
-                                {formatCurrency(invoiceSummary?.total_income || 0)}
-                            </p>
-                            <p className="text-sm text-emerald-700">
-                                {invoiceSummary?.income_invoices || 0} invoices
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <Link href={`/departmentincome/${departmentId}`} className="block group">
+                        <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <TrendingUp className="h-6 w-6 text-emerald-600" />
+                                    <span className="text-sm font-medium text-emerald-700">Income</span>
+                                </div>
+                                <p className="text-2xl font-bold text-emerald-600 mb-1">
+                                    {formatCurrency(invoiceSummary?.total_income || 0)}
+                                </p>
+                                <p className="text-sm text-emerald-700">
+                                    {invoiceSummary?.income_invoices || 0} invoices
+                                </p>
+                                <p className="text-xs text-emerald-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Click to view details →
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
 
                     <Card className="border-0 shadow-xl bg-gradient-to-br from-red-50 to-red-100 hover:shadow-2xl transition-all duration-300">
                         <CardContent className="p-6">
@@ -480,39 +556,143 @@ export default function DepartmentDetailPage() {
                 </div>
 
                 {/* Stages Breakdown */}
-                {Object.keys(stageBreakdown).length > 0 && (
+                {stageBreakdown.length > 0 && (
                     <Card className="border-0 shadow-xl bg-white mb-8">
                         <CardHeader>
                             <CardTitle className="flex items-center text-xl font-bold text-gray-900">
                                 <BarChart3 className="h-6 w-6 mr-3 text-blue-600" />
-                                Construction Stages Breakdown
+                                Construction Stages Budget Tracking
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {Object.values(stageBreakdown).map((stage: any) => (
-                                    <div key={stage.name} className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
-                                        <h4 className="font-semibold text-gray-900 mb-2">{stage.name}</h4>
-                                        <div className="space-y-1">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">Total:</span>
-                                                <span className="font-medium text-gray-900">{formatCurrency(stage.total)}</span>
+                            <div className="space-y-4">
+                                {stageBreakdown.map((stage) => {
+                                    const hasBudget = stage.budgeted_amount > 0;
+                                    const budgetPercentage = hasBudget
+                                        ? Math.min((stage.expenses / stage.budgeted_amount) * 100, 150)
+                                        : 0;
+                                    const isOverBudget = hasBudget && stage.expenses > stage.budgeted_amount;
+                                    const overBudgetAmount = isOverBudget
+                                        ? stage.expenses - stage.budgeted_amount
+                                        : 0;
+
+                                    const isExpanded = expandedStages.has(stage.stage_id);
+                                    const invoices = stageInvoices[stage.stage_id] || [];
+                                    const invoiceCount = invoices.length;
+
+                                    return (
+                                        <div key={stage.stage_id} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                                            {/* Stage Progress Bar Background - Clickable */}
+                                            <div
+                                                onClick={() => toggleStageExpanded(stage.stage_id)}
+                                                className={`relative h-20 rounded-t-lg border-b cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                                    !hasBudget
+                                                        ? 'bg-gray-50 border-dashed border-gray-300'
+                                                        : isOverBudget
+                                                            ? 'bg-red-50 border-red-200'
+                                                            : 'bg-gray-50 border-gray-200'
+                                                }`}
+                                            >
+                                                {/* Progress Bar */}
+                                                {hasBudget && (
+                                                    <div
+                                                        className={`h-full transition-all duration-500 ${
+                                                            isOverBudget
+                                                                ? 'bg-gradient-to-r from-red-500 to-red-600'
+                                                                : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                                                        }`}
+                                                        style={{
+                                                            width: `${budgetPercentage}%`,
+                                                            opacity: 0.15
+                                                        }}
+                                                    />
+                                                )}
+
+                                                {/* Stage Content */}
+                                                <div className="absolute inset-0 flex items-center justify-between p-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <h4 className="font-semibold text-gray-900 text-base truncate">
+                                                                {stage.stage_name}
+                                                            </h4>
+                                                            {isOverBudget && (
+                                                                <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                                                            )}
+                                                            {invoiceCount > 0 && (
+                                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                                                                    {invoiceCount} {invoiceCount === 1 ? 'bill' : 'bills'}
+                                                                </Badge>
+                                                            )}
+                                                            {/* Expand/Collapse Chevron */}
+                                                            <div className="ml-auto">
+                                                                {isExpanded ? (
+                                                                    <ChevronUp className="h-5 w-5 text-gray-600" />
+                                                                ) : (
+                                                                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center text-sm text-gray-600 space-x-3">
+                                                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium text-xs">
+                                                                {stage.items} items
+                                                            </span>
+                                                            {hasBudget ? (
+                                                                <span className={isOverBudget ? 'text-red-600 font-semibold' : 'text-gray-700 font-medium'}>
+                                                                    {budgetPercentage.toFixed(0)}% of budget used
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-amber-600 font-semibold">⚠️ No budget set</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-right ml-6 flex flex-col items-end gap-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <div>
+                                                                <p className={`font-bold text-base ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
+                                                                    {formatCurrency(stage.expenses)}
+                                                                </p>
+                                                                {hasBudget && (
+                                                                    <p className="text-sm text-gray-500">
+                                                                        of {formatCurrency(stage.budgeted_amount)}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <Button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditBudget(stage);
+                                                                }}
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="p-2 hover:bg-blue-100"
+                                                            title="Edit budget"
+                                                        >
+                                                            <Pencil className="h-4 w-4 text-blue-600" />
+                                                        </Button>
+                                                    </div>
+                                                    {isOverBudget && (
+                                                        <Badge variant="destructive" className="text-xs font-semibold">
+                                                            +{formatCurrency(overBudgetAmount)} over budget
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-emerald-600">Income:</span>
-                                                <span className="font-medium text-emerald-600">{formatCurrency(stage.income)}</span>
                                             </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-red-600">Expenses:</span>
-                                                <span className="font-medium text-red-600">{formatCurrency(stage.expenses)}</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm pt-1 border-t border-gray-200">
-                                                <span className="text-gray-600">Items:</span>
-                                                <span className="font-medium text-blue-600">{stage.items}</span>
-                                            </div>
+
+                                            {/* Invoice List - Expandable Section */}
+                                            {invoiceCount > 0 && (
+                                                <div className="p-4 bg-gray-50">
+                                                    <StageInvoiceList
+                                                        invoices={invoices}
+                                                        isExpanded={isExpanded}
+                                                        maxInitialItems={5}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>
@@ -580,6 +760,22 @@ export default function DepartmentDetailPage() {
                 </Card>
                 </div>
             </div>
+
+            {/* Budget Edit Dialog */}
+            {editingStage && (
+                <BudgetEditDialog
+                    isOpen={isDialogOpen}
+                    onClose={() => {
+                        setIsDialogOpen(false);
+                        setEditingStage(null);
+                    }}
+                    onSave={handleSaveBudget}
+                    currentBudget={editingStage.budgeted_amount}
+                    stageName={editingStage.stage_name}
+                    departmentId={departmentId}
+                    stageId={editingStage.stage_id}
+                />
+            )}
         </div>
     );
 }

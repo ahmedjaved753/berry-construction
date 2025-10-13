@@ -52,6 +52,7 @@ interface DepartmentExpense {
         stage_id: string;
         line_items_count: number;
         stage_total_spent: number;
+        budgeted_amount: number;
         avg_line_amount: number;
         latest_stage_activity: string;
     }[];

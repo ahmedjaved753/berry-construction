@@ -85,6 +85,24 @@ export async function GET(
 
     console.log("✅ [DEPT API] Department found:", department.name);
 
+    // Fetch budget data for stages in this department
+    const { data: budgetData, error: budgetError } = await supabase
+      .from("budget_summary_stage")
+      .select("stage_id, budgeted_amount")
+      .eq("department_id", departmentId);
+
+    if (budgetError) {
+      console.log("⚠️ [DEPT API] Budget query failed:", budgetError);
+    }
+
+    console.log("✅ [DEPT API] Budget data found:", budgetData?.length || 0);
+
+    // Create budget lookup map
+    const budgetMap = new Map<string, number>();
+    budgetData?.forEach((budget: any) => {
+      budgetMap.set(budget.stage_id, parseFloat(budget.budgeted_amount) || 0);
+    });
+
     // Fetch line items (filter by status) - centralized model, no user_id filter
     const { data: lineItems, error: lineItemsError } = await supabase
       .from("invoice_line_items")
@@ -97,7 +115,8 @@ export async function GET(
                 line_amount,
                 tax_amount,
                 created_at,
-                stages!left(name),
+                stage_id,
+                stages!left(id, name),
                 invoices!inner(
                     id,
                     type,
@@ -130,6 +149,7 @@ export async function GET(
         unit_amount: parseFloat(item.unit_amount) || 0,
         line_amount: parseFloat(item.line_amount) || 0,
         tax_amount: parseFloat(item.tax_amount) || 0,
+        stage_id: item.stage_id || null,
         stage_name: stage?.name || null,
         invoice_id: invoice?.id || null,
         invoice_type: invoice?.type || "ACCPAY",
@@ -177,12 +197,106 @@ export async function GET(
       earliest_invoice_date: dates[0] || "",
     };
 
+    // Build stage breakdown with budget data
+    const stageMap = new Map<string, any>();
+
+    processedLineItems.forEach((item) => {
+      if (!item.stage_id || !item.stage_name) return;
+
+      if (!stageMap.has(item.stage_id)) {
+        stageMap.set(item.stage_id, {
+          stage_id: item.stage_id,
+          stage_name: item.stage_name,
+          expenses: 0,
+          income: 0,
+          items: 0,
+          budgeted_amount: budgetMap.get(item.stage_id) || 0,
+        });
+      }
+
+      const stage = stageMap.get(item.stage_id);
+      stage.items += 1;
+
+      if (item.invoice_type === 'ACCREC') {
+        stage.income += item.line_amount;
+      } else {
+        stage.expenses += item.line_amount;
+      }
+    });
+
+    const stageBreakdown = Array.from(stageMap.values());
+
+    // Fetch detailed invoice information for each stage with xero_invoice_id
+    const { data: stageInvoiceData, error: invoiceError } = await supabase
+      .from("invoice_line_items")
+      .select(
+        `
+        stage_id,
+        line_amount,
+        invoices!inner(
+          xero_invoice_id,
+          contact_name,
+          invoice_date,
+          type,
+          status,
+          reference
+        )
+      `
+      )
+      .eq("department_id", departmentId)
+      .in("invoices.status", invoiceStatuses)
+      .eq("invoices.type", "ACCPAY")
+      .not("stage_id", "is", null);
+
+    if (invoiceError) {
+      console.log("⚠️ [DEPT API] Stage invoices query failed:", invoiceError);
+    }
+
+    // Group invoices by stage and aggregate
+    const stageInvoicesMap = new Map<string, Map<string, any>>();
+
+    stageInvoiceData?.forEach((item: any) => {
+      const stageId = item.stage_id;
+      const invoice = item.invoices;
+
+      if (!stageInvoicesMap.has(stageId)) {
+        stageInvoicesMap.set(stageId, new Map());
+      }
+
+      const stageInvoices = stageInvoicesMap.get(stageId)!;
+      const xeroId = invoice.xero_invoice_id;
+
+      if (!stageInvoices.has(xeroId)) {
+        stageInvoices.set(xeroId, {
+          xero_invoice_id: xeroId,
+          contact_name: invoice.contact_name,
+          invoice_date: invoice.invoice_date,
+          line_amount: parseFloat(item.line_amount) || 0,
+          reference: invoice.reference,
+        });
+      } else {
+        // Aggregate line amounts for same invoice
+        const existing = stageInvoices.get(xeroId);
+        existing.line_amount += parseFloat(item.line_amount) || 0;
+      }
+    });
+
+    // Convert to object format and sort
+    const stageInvoices: Record<string, any[]> = {};
+    stageInvoicesMap.forEach((invoices, stageId) => {
+      stageInvoices[stageId] = Array.from(invoices.values()).sort((a, b) =>
+        new Date(b.invoice_date).getTime() - new Date(a.invoice_date).getTime()
+      );
+    });
+
     console.log("🎉 [DEPT API] Success! Returning data for:", department.name);
 
     return NextResponse.json({
       department,
       lineItems: processedLineItems,
       summary,
+      stageBreakdown,
+      stageInvoices,
     });
   } catch (error: any) {
     console.error("💥 [DEPT API] Unexpected error:", error);
