@@ -55,7 +55,7 @@ export function StageInvoiceList({
   };
 
   return (
-    <div className="mt-3 pt-3 border-t border-gray-200 animate-in slide-in-from-top-2 duration-300">
+    <div className="mt-3 pt-3 border-t border-border animate-in slide-in-from-top-2 duration-300">
       <div className="space-y-2">
         {displayedInvoices.map((invoice) => (
           <a
@@ -63,21 +63,21 @@ export function StageInvoiceList({
             href={getXeroLink(invoice.xero_invoice_id)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 group"
+            className="flex items-center justify-between p-3 bg-card border border-border rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 group"
           >
             <div className="flex-1 min-w-0 mr-4">
               <div className="flex items-center gap-2 mb-1">
-                <p className="font-medium text-gray-900 text-sm truncate">
+                <p className="font-medium text-foreground text-sm truncate">
                   {invoice.contact_name}
                 </p>
                 <ExternalLink className="h-3 w-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 {formatDate(invoice.invoice_date)}
               </p>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="font-semibold text-gray-900 text-sm">
+              <p className="font-semibold text-foreground text-sm">
                 {formatCurrency(invoice.line_amount)}
               </p>
             </div>
@@ -115,8 +115,8 @@ export function StageInvoiceList({
         </Button>
       )}
 
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center">
+      <div className="mt-3 pt-3 border-t border-border">
+        <p className="text-xs text-muted-foreground text-center">
           {invoices.length} {invoices.length === 1 ? "invoice" : "invoices"} •{" "}
           Total: {formatCurrency(invoices.reduce((sum, inv) => sum + inv.line_amount, 0))}
         </p>

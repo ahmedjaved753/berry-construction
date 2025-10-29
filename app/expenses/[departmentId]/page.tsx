@@ -31,7 +31,6 @@ import {
     ChevronUp,
     Wallet,
     AlertCircle,
-    DollarSign
 } from "lucide-react";
 
 interface DepartmentInfo {
@@ -395,7 +394,7 @@ export default function DepartmentDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+            <div className="min-h-screen bg-background">
                 <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
                 <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -426,7 +425,7 @@ export default function DepartmentDetailPage() {
 
     if (error || !departmentInfo) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+            <div className="min-h-screen bg-background">
                 <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
                 <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -434,8 +433,8 @@ export default function DepartmentDetailPage() {
                     <Card className="w-full max-w-md">
                         <CardContent className="p-6 text-center">
                             <Building2 className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Department Not Found</h3>
-                            <p className="text-gray-600 mb-4">{error || 'The department you are looking for does not exist.'}</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">Department Not Found</h3>
+                            <p className="text-muted-foreground mb-4">{error || 'The department you are looking for does not exist.'}</p>
                             <Button onClick={() => router.back()} variant="outline">
                                 Go Back
                             </Button>
@@ -447,7 +446,7 @@ export default function DepartmentDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen bg-background">
             <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
             <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -458,7 +457,7 @@ export default function DepartmentDetailPage() {
                     <Button
                         onClick={() => router.back()}
                         variant="outline"
-                        className="mb-4 hover:bg-blue-50"
+                        className="mb-4 hover:bg-accent"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Expenses
@@ -469,8 +468,8 @@ export default function DepartmentDetailPage() {
                             <Building2 className="h-8 w-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-1">{departmentInfo.name}</h1>
-                            <div className="flex items-center space-x-4 text-gray-600">
+                            <h1 className="text-4xl font-bold text-foreground mb-1">{departmentInfo.name}</h1>
+                            <div className="flex items-center space-x-4 text-muted-foreground">
                                 <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
                                     {departmentInfo.status}
                                 </Badge>
@@ -494,120 +493,144 @@ export default function DepartmentDetailPage() {
 
                     {/* Total Income - Clickable link to income detail page */}
                     <Link href={`/departmentincome/${departmentId}`} className="block group">
-                        <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between mb-2">
-                                    <TrendingUp className="h-6 w-6 text-emerald-600" />
-                                    <span className="text-sm font-medium text-emerald-700">Total Income</span>
+                        <Card className="bg-card border-l-4 border-emerald-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden cursor-pointer hover:scale-105">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
+                            <CardContent className="p-6 relative">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-emerald-400 mb-2">TOTAL INCOME</p>
+                                        <p className="text-3xl font-bold text-foreground">
+                                            {formatCurrency(invoiceSummary?.total_income || 0)}
+                                        </p>
+                                        <p className="text-xs text-emerald-400/80 mt-2">
+                                            {invoiceSummary?.income_invoices || 0} invoices
+                                        </p>
+                                        <p className="text-xs text-emerald-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Click to view details →
+                                        </p>
+                                    </div>
+                                    <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center ring-2 ring-emerald-500/30">
+                                        <TrendingUp className="w-7 h-7 text-emerald-400" />
+                                    </div>
                                 </div>
-                                <p className="text-2xl font-bold text-emerald-600 mb-1">
-                                    {formatCurrency(invoiceSummary?.total_income || 0)}
-                                </p>
-                                <p className="text-sm text-emerald-700">
-                                    {invoiceSummary?.income_invoices || 0} invoices
-                                </p>
-                                <p className="text-xs text-emerald-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Click to view details →
-                                </p>
                             </CardContent>
                         </Card>
                     </Link>
 
                     {/* Total Expenses (excl. overheads) */}
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-rose-50 to-red-50 hover:shadow-2xl transition-all duration-300">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <TrendingDown className="h-6 w-6 text-rose-600" />
-                                <span className="text-sm font-medium text-rose-700">Total Expenses</span>
+                    <Card className="bg-card border-l-4 border-rose-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-rose-400 mb-2">TOTAL EXPENSES</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {formatCurrency(invoiceSummary?.expenses_excl_overheads || 0)}
+                                    </p>
+                                    <p className="text-xs text-rose-400/80 mt-2">
+                                        Excludes overheads
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center ring-2 ring-rose-500/30">
+                                    <TrendingDown className="w-7 h-7 text-rose-400" />
+                                </div>
                             </div>
-                            <p className="text-2xl font-bold text-rose-600 mb-1">
-                                {formatCurrency(invoiceSummary?.expenses_excl_overheads || 0)}
-                            </p>
-                            <p className="text-sm text-rose-700">
-                                Excludes overheads
-                            </p>
                         </CardContent>
                     </Card>
 
                     {/* Gross Profit */}
-                    <Card className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ${(invoiceSummary?.gross_profit || 0) >= 0
-                        ? 'bg-gradient-to-br from-blue-50 to-cyan-50'
-                        : 'bg-gradient-to-br from-orange-50 to-amber-50'
-                        }`}>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <BarChart3 className={`h-6 w-6 ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
-                                <span className={`text-sm font-medium ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                                    Gross Profit
-                                </span>
+                    <Card className={`bg-card border-l-4 ${(invoiceSummary?.gross_profit || 0) >= 0 ? "border-blue-500" : "border-orange-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${(invoiceSummary?.gross_profit || 0) >= 0 ? "from-blue-500/10" : "from-orange-500/10"} to-transparent pointer-events-none`}></div>
+                        <CardContent className="p-6 relative">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className={`text-sm font-medium mb-2 ${(invoiceSummary?.gross_profit || 0) >= 0 ? "text-blue-400" : "text-orange-400"}`}>
+                                        GROSS PROFIT
+                                    </p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {(invoiceSummary?.gross_profit || 0) >= 0 ? '' : '-'}
+                                        {formatCurrency(Math.abs(invoiceSummary?.gross_profit || 0))}
+                                    </p>
+                                    <p className={`text-xs mt-2 ${(invoiceSummary?.gross_profit || 0) >= 0 ? "text-blue-400/80" : "text-orange-400/80"}`}>
+                                        Income - Expenses (excl. overheads)
+                                    </p>
+                                </div>
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${(invoiceSummary?.gross_profit || 0) >= 0 ? "bg-blue-500/20 ring-blue-500/30" : "bg-orange-500/20 ring-orange-500/30"}`}>
+                                    <BarChart3 className={`w-7 h-7 ${(invoiceSummary?.gross_profit || 0) >= 0 ? "text-blue-400" : "text-orange-400"}`} />
+                                </div>
                             </div>
-                            <p className={`text-2xl font-bold mb-1 ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                                {(invoiceSummary?.gross_profit || 0) >= 0 ? '' : '-'}
-                                {formatCurrency(Math.abs(invoiceSummary?.gross_profit || 0))}
-                            </p>
-                            <p className={`text-sm ${(invoiceSummary?.gross_profit || 0) >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                                Income - Expenses (excl. overheads)
-                            </p>
                         </CardContent>
                     </Card>
 
                     {/* Row 2: Overheads, Net Profit, Unassigned Bills */}
 
                     {/* Overheads */}
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-purple-50 to-violet-50 hover:shadow-2xl transition-all duration-300">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <Wallet className="h-6 w-6 text-purple-600" />
-                                <span className="text-sm font-medium text-purple-700">Overheads</span>
+                    <Card className="bg-card border-l-4 border-purple-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-purple-400 mb-2">OVERHEADS</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {formatCurrency(invoiceSummary?.overheads || 0)}
+                                    </p>
+                                    <p className="text-xs text-purple-400/80 mt-2">
+                                        Stage: 21 - Overheads
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center ring-2 ring-purple-500/30">
+                                    <Wallet className="w-7 h-7 text-purple-400" />
+                                </div>
                             </div>
-                            <p className="text-2xl font-bold text-purple-600 mb-1">
-                                {formatCurrency(invoiceSummary?.overheads || 0)}
-                            </p>
-                            <p className="text-sm text-purple-700">
-                                Stage: 21 - Overheads
-                            </p>
                         </CardContent>
                     </Card>
 
                     {/* Net Profit */}
-                    <Card className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ${(invoiceSummary?.net_profit || 0) >= 0
-                        ? 'bg-gradient-to-br from-indigo-50 to-blue-50'
-                        : 'bg-gradient-to-br from-red-50 to-pink-50'
-                        }`}>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <DollarSign className={`h-6 w-6 ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-600' : 'text-red-600'}`} />
-                                <span className={`text-sm font-medium ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-700' : 'text-red-700'}`}>
-                                    Net Profit
-                                </span>
+                    <Card className={`bg-card border-l-4 ${(invoiceSummary?.net_profit || 0) >= 0 ? "border-indigo-500" : "border-red-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${(invoiceSummary?.net_profit || 0) >= 0 ? "from-indigo-500/10" : "from-red-500/10"} to-transparent pointer-events-none`}></div>
+                        <CardContent className="p-6 relative">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className={`text-sm font-medium mb-2 ${(invoiceSummary?.net_profit || 0) >= 0 ? "text-indigo-400" : "text-red-400"}`}>
+                                        NET PROFIT
+                                    </p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {(invoiceSummary?.net_profit || 0) >= 0 ? '' : '-'}
+                                        {formatCurrency(Math.abs(invoiceSummary?.net_profit || 0))}
+                                    </p>
+                                    <p className={`text-xs mt-2 ${(invoiceSummary?.net_profit || 0) >= 0 ? "text-indigo-400/80" : "text-red-400/80"}`}>
+                                        {(invoiceSummary?.net_profit || 0) >= 0 ? 'Profit' : 'Loss'} after overheads
+                                    </p>
+                                </div>
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${(invoiceSummary?.net_profit || 0) >= 0 ? "bg-indigo-500/20 ring-indigo-500/30" : "bg-red-500/20 ring-red-500/30"}`}>
+                                    <PoundSterling className={`w-7 h-7 ${(invoiceSummary?.net_profit || 0) >= 0 ? "text-indigo-400" : "text-red-400"}`} />
+                                </div>
                             </div>
-                            <p className={`text-2xl font-bold mb-1 ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
-                                {(invoiceSummary?.net_profit || 0) >= 0 ? '' : '-'}
-                                {formatCurrency(Math.abs(invoiceSummary?.net_profit || 0))}
-                            </p>
-                            <p className={`text-sm ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-indigo-700' : 'text-red-700'}`}>
-                                {(invoiceSummary?.net_profit || 0) >= 0 ? 'Profit' : 'Loss'} after overheads
-                            </p>
                         </CardContent>
                     </Card>
 
                     {/* Unassigned Bills - Clickable link to unassigned bills page */}
                     <Link href={`/unassignedbills/${departmentId}`} className="block group">
-                        <Card className="border-0 shadow-xl bg-gradient-to-br from-amber-50 to-yellow-50 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between mb-2">
-                                    <AlertCircle className="h-6 w-6 text-amber-600" />
-                                    <span className="text-sm font-medium text-amber-700">Unassigned Bills</span>
+                        <Card className="bg-card border-l-4 border-amber-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden cursor-pointer hover:scale-105">
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none"></div>
+                            <CardContent className="p-6 relative">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-amber-400 mb-2">UNASSIGNED BILLS</p>
+                                        <p className="text-3xl font-bold text-foreground">
+                                            {formatCurrency(invoiceSummary?.unassigned_bills || 0)}
+                                        </p>
+                                        <p className="text-xs text-amber-400/80 mt-2">
+                                            Missing stage assignment
+                                        </p>
+                                        <p className="text-xs text-amber-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Click to view details →
+                                        </p>
+                                    </div>
+                                    <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center ring-2 ring-amber-500/30">
+                                        <AlertCircle className="w-7 h-7 text-amber-400" />
+                                    </div>
                                 </div>
-                                <p className="text-2xl font-bold text-amber-600 mb-1">
-                                    {formatCurrency(invoiceSummary?.unassigned_bills || 0)}
-                                </p>
-                                <p className="text-sm text-amber-700">
-                                    Missing stage assignment
-                                </p>
-                                <p className="text-xs text-amber-600 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    Click to view details →
-                                </p>
                             </CardContent>
                         </Card>
                     </Link>
@@ -615,9 +638,9 @@ export default function DepartmentDetailPage() {
 
                 {/* Stages Breakdown */}
                 {stageBreakdown.length > 0 && (
-                    <Card className="border-0 shadow-xl bg-white mb-8">
+                    <Card className="border-0 shadow-xl bg-card mb-8">
                         <CardHeader>
-                            <CardTitle className="flex items-center text-xl font-bold text-gray-900">
+                            <CardTitle className="flex items-center text-xl font-bold text-foreground">
                                 <BarChart3 className="h-6 w-6 mr-3 text-blue-600" />
                                 Construction Stages Budget Tracking
                             </CardTitle>
@@ -639,16 +662,16 @@ export default function DepartmentDetailPage() {
                                     const invoiceCount = invoices.length;
 
                                     return (
-                                        <div key={stage.stage_id} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                                        <div key={stage.stage_id} className="border border-border rounded-lg overflow-hidden bg-card">
                                             {/* Stage Progress Bar Background - Clickable */}
                                             <div
                                                 onClick={() => toggleStageExpanded(stage.stage_id)}
                                                 className={`relative h-20 rounded-t-lg border-b cursor-pointer transition-all duration-200 hover:shadow-md ${
                                                     !hasBudget
-                                                        ? 'bg-gray-50 border-dashed border-gray-300'
+                                                        ? 'bg-secondary border-dashed border-gray-300'
                                                         : isOverBudget
                                                             ? 'bg-red-50 border-red-200'
-                                                            : 'bg-gray-50 border-gray-200'
+                                                            : 'bg-secondary border-border'
                                                 }`}
                                             >
                                                 {/* Progress Bar */}
@@ -670,7 +693,7 @@ export default function DepartmentDetailPage() {
                                                 <div className="absolute inset-0 flex items-center justify-between p-4">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-2">
-                                                            <h4 className="font-semibold text-gray-900 text-base truncate">
+                                                            <h4 className="font-semibold text-foreground text-base truncate">
                                                                 {stage.stage_name}
                                                             </h4>
                                                             {isOverBudget && (
@@ -684,13 +707,13 @@ export default function DepartmentDetailPage() {
                                                             {/* Expand/Collapse Chevron */}
                                                             <div className="ml-auto">
                                                                 {isExpanded ? (
-                                                                    <ChevronUp className="h-5 w-5 text-gray-600" />
+                                                                    <ChevronUp className="h-5 w-5 text-muted-foreground" />
                                                                 ) : (
-                                                                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                                                                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center text-sm text-gray-600 space-x-3">
+                                                        <div className="flex items-center text-sm text-muted-foreground space-x-3">
                                                             <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium text-xs">
                                                                 {stage.items} items
                                                             </span>
@@ -707,7 +730,7 @@ export default function DepartmentDetailPage() {
                                                     <div className="text-right ml-6 flex flex-col items-end gap-2">
                                                         <div className="flex items-center gap-3">
                                                             <div>
-                                                                <p className={`font-bold text-base ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
+                                                                <p className={`font-bold text-base ${isOverBudget ? 'text-red-600' : 'text-foreground'}`}>
                                                                     {formatCurrency(stage.expenses)}
                                                                 </p>
                                                                 {hasBudget && (
@@ -740,7 +763,7 @@ export default function DepartmentDetailPage() {
 
                                             {/* Invoice List - Expandable Section */}
                                             {invoiceCount > 0 && (
-                                                <div className="p-4 bg-gray-50">
+                                                <div className="p-4 bg-secondary">
                                                     <StageInvoiceList
                                                         invoices={invoices}
                                                         isExpanded={isExpanded}
@@ -757,9 +780,9 @@ export default function DepartmentDetailPage() {
                 )}
 
                 {/* Recent Line Items */}
-                <Card className="border-0 shadow-xl bg-white">
+                <Card className="border-0 shadow-xl bg-card">
                     <CardHeader>
-                        <CardTitle className="flex items-center text-xl font-bold text-gray-900">
+                        <CardTitle className="flex items-center text-xl font-bold text-foreground">
                             <FileText className="h-6 w-6 mr-3 text-blue-600" />
                             Recent Line Items
                             <Badge variant="outline" className="ml-auto bg-blue-100 text-blue-800 border-blue-200">
@@ -770,11 +793,11 @@ export default function DepartmentDetailPage() {
                     <CardContent className="p-6">
                         <div className="space-y-4">
                             {lineItems.map((item) => (
-                                <div key={item.id} className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+                                <div key={item.id} className="p-4 bg-card/50 rounded-xl border border-border hover:shadow-md transition-shadow">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">{item.description}</h4>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                                            <h4 className="font-medium text-foreground mb-2 line-clamp-2">{item.description}</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
                                                 <div className="flex items-center">
                                                     <Calculator className="h-3 w-3 mr-1" />
                                                     Qty: {item.quantity}

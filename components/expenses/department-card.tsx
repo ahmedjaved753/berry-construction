@@ -18,7 +18,8 @@ import {
     ArrowRight,
     Eye,
     Pencil,
-    AlertTriangle
+    AlertTriangle,
+    Star
 } from "lucide-react";
 
 interface Stage {
@@ -42,6 +43,8 @@ interface DepartmentCardProps {
     income_invoices: number;
     expense_invoices: number;
     stages: Stage[];
+    isFavorited?: boolean;
+    onToggleFavorite?: () => void;
 }
 
 export function DepartmentCard({
@@ -54,7 +57,9 @@ export function DepartmentCard({
     total_invoices,
     income_invoices,
     expense_invoices,
-    stages
+    stages,
+    isFavorited = false,
+    onToggleFavorite
 }: DepartmentCardProps) {
     const router = useRouter();
     const [editingStage, setEditingStage] = useState<Stage | null>(null);
@@ -111,30 +116,30 @@ export function DepartmentCard({
     };
 
     const getProfitabilityColor = (profit: number) => {
-        if (profit > 0) return 'text-emerald-600';
-        if (profit < 0) return 'text-red-500';
-        return 'text-gray-600';
+        if (profit > 0) return 'text-emerald-600 dark:text-emerald-400';
+        if (profit < 0) return 'text-red-500 dark:text-red-400';
+        return 'text-muted-foreground';
     };
 
     const getProfitabilityBgColor = (profit: number) => {
-        if (profit > 0) return 'bg-emerald-50 border-emerald-200';
-        if (profit < 0) return 'bg-red-50 border-red-200';
-        return 'bg-gray-50 border-gray-200';
+        if (profit > 0) return 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900';
+        if (profit < 0) return 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900';
+        return 'bg-secondary border-border';
     };
 
     return (
-        <Card className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-white border-0 shadow-md">
-            <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+        <Card className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-card border-0 shadow-md">
+            <CardHeader className="pb-4 bg-card/50 border-b border-border">
                 <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-blue-100 rounded-xl">
-                            <Building2 className="h-5 w-5 text-blue-600" />
+                        <div className="p-2 bg-blue-100 dark:bg-blue-950/50 rounded-xl">
+                            <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="flex-1">
-                            <CardTitle className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                            <CardTitle className="text-lg font-semibold text-foreground mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                 {department_name}
                             </CardTitle>
-                            <div className="flex items-center text-sm text-gray-500 space-x-3">
+                            <div className="flex items-center text-sm text-muted-foreground space-x-3">
                                 <span className="flex items-center">
                                     <Calendar className="h-3 w-3 mr-1" />
                                     {formatDate(latest_activity)}
@@ -146,15 +151,36 @@ export function DepartmentCard({
                             </div>
                         </div>
                     </div>
-                    <Badge
-                        variant={net_profit >= 0 ? "default" : "destructive"}
-                        className={`font-medium ${net_profit >= 0
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                            }`}
-                    >
-                        {net_profit >= 0 ? 'Profitable' : 'Loss'}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2">
+                        {onToggleFavorite && (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onToggleFavorite();
+                                }}
+                                className="group/star p-1.5 hover:bg-amber-50 rounded-md transition-all duration-200"
+                                title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                            >
+                                <Star
+                                    className={`h-5 w-5 transition-all duration-200 ${
+                                        isFavorited
+                                            ? 'fill-amber-400 text-amber-400'
+                                            : 'text-gray-400 group-hover/star:text-amber-400 group-hover/star:scale-110'
+                                    }`}
+                                />
+                            </button>
+                        )}
+                        <Badge
+                            variant={net_profit >= 0 ? "default" : "destructive"}
+                            className={`font-medium ${net_profit >= 0
+                                ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-950/70 border-emerald-200 dark:border-emerald-800'
+                                : 'bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-950/70 border-red-200 dark:border-red-800'
+                                }`}
+                        >
+                            {net_profit >= 0 ? 'Profitable' : 'Loss'}
+                        </Badge>
+                    </div>
                 </div>
             </CardHeader>
 
@@ -164,31 +190,31 @@ export function DepartmentCard({
                     {/* Income */}
                     <div
                         onClick={() => router.push(`/departmentincome/${department_id}`)}
-                        className="text-center p-4 bg-emerald-50 rounded-xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200 group"
+                        className="text-center p-4 bg-emerald-950/30 rounded-xl border border-emerald-900/50 cursor-pointer hover:bg-emerald-900/40 hover:border-emerald-800 hover:shadow-md transition-all duration-200 group"
                     >
                         <div className="flex items-center justify-center mb-2">
-                            <TrendingUp className="h-4 w-4 text-emerald-600 mr-1" />
-                            <p className="text-sm font-medium text-emerald-700">Income</p>
+                            <TrendingUp className="h-4 w-4 text-emerald-400 mr-1" />
+                            <p className="text-sm font-medium text-emerald-400">Income</p>
                         </div>
-                        <p className="text-xl font-bold text-emerald-600 mb-1">
+                        <p className="text-xl font-bold text-emerald-400 mb-1">
                             {formatCurrency(income_received)}
                         </p>
-                        <p className="text-xs text-emerald-600/70">{income_invoices} invoices</p>
-                        <p className="text-xs text-emerald-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-xs text-emerald-400/70">{income_invoices} invoices</p>
+                        <p className="text-xs text-emerald-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             View details →
                         </p>
                     </div>
 
                     {/* Expenses */}
-                    <div className="text-center p-4 bg-red-50 rounded-xl border border-red-100">
+                    <div className="text-center p-4 bg-rose-950/30 rounded-xl border border-rose-900/50">
                         <div className="flex items-center justify-center mb-2">
-                            <TrendingDown className="h-4 w-4 text-red-600 mr-1" />
-                            <p className="text-sm font-medium text-red-700">Expenses</p>
+                            <TrendingDown className="h-4 w-4 text-rose-400 mr-1" />
+                            <p className="text-sm font-medium text-rose-400">Expenses</p>
                         </div>
-                        <p className="text-xl font-bold text-red-600 mb-1">
+                        <p className="text-xl font-bold text-rose-400 mb-1">
                             {formatCurrency(expenses_spent)}
                         </p>
-                        <p className="text-xs text-red-600/70">{expense_invoices} invoices</p>
+                        <p className="text-xs text-rose-400/70">{expense_invoices} invoices</p>
                     </div>
 
                     {/* Net Profit */}
@@ -225,11 +251,11 @@ export function DepartmentCard({
                 {stages.length > 0 && (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-semibold text-gray-900 flex items-center">
-                                <BarChart3 className="h-4 w-4 mr-2 text-blue-600" />
+                            <h4 className="text-sm font-semibold text-foreground flex items-center">
+                                <BarChart3 className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
                                 Construction Stages
                             </h4>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
                                 {stages.length} stages
                             </span>
                         </div>
@@ -250,10 +276,10 @@ export function DepartmentCard({
                                         {/* Stage Progress Bar Background */}
                                         <div className={`h-16 rounded-lg border overflow-hidden ${
                                             !hasBudget
-                                                ? 'bg-gray-50 border-dashed border-gray-300'
+                                                ? 'bg-secondary border-dashed border-border'
                                                 : isOverBudget
-                                                    ? 'bg-red-50 border-red-200'
-                                                    : 'bg-gray-50 border-gray-200'
+                                                    ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900'
+                                                    : 'bg-secondary border-border'
                                         }`}>
                                             {/* Progress Bar */}
                                             {hasBudget && (
@@ -275,23 +301,23 @@ export function DepartmentCard({
                                         <div className="absolute inset-0 flex items-center justify-between p-3">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <p className="font-medium text-gray-900 text-sm truncate">
+                                                    <p className="font-medium text-foreground text-sm truncate">
                                                         {stage.stage_name}
                                                     </p>
                                                     {isOverBudget && (
-                                                        <AlertTriangle className="h-3 w-3 text-red-600 flex-shrink-0" />
+                                                        <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400 flex-shrink-0" />
                                                     )}
                                                 </div>
-                                                <div className="flex items-center text-xs text-gray-500 space-x-2">
-                                                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                                                <div className="flex items-center text-xs text-muted-foreground space-x-2">
+                                                    <span className="bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
                                                         {stage.line_items_count} items
                                                     </span>
                                                     {hasBudget ? (
-                                                        <span className={isOverBudget ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                                                        <span className={isOverBudget ? 'text-red-600 dark:text-red-400 font-medium' : 'text-muted-foreground'}>
                                                             {budgetPercentage.toFixed(0)}% of budget
                                                         </span>
                                                     ) : (
-                                                        <span className="text-amber-600 font-medium">No budget set</span>
+                                                        <span className="text-amber-600 dark:text-amber-400 font-medium">No budget set</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -299,21 +325,21 @@ export function DepartmentCard({
                                             <div className="text-right ml-4 flex flex-col items-end gap-1">
                                                 <div className="flex items-center gap-2">
                                                     <div>
-                                                        <p className={`font-bold text-sm ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
+                                                        <p className={`font-bold text-sm ${isOverBudget ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
                                                             {formatCurrency(stage.stage_total_spent)}
                                                         </p>
                                                         {hasBudget && (
-                                                            <p className="text-xs text-gray-500">
+                                                            <p className="text-xs text-muted-foreground">
                                                                 of {formatCurrency(stage.budgeted_amount)}
                                                             </p>
                                                         )}
                                                     </div>
                                                     <button
                                                         onClick={() => handleEditBudget(stage)}
-                                                        className="p-1.5 hover:bg-blue-100 rounded-md transition-colors"
+                                                        className="p-1.5 hover:bg-accent rounded-md transition-colors"
                                                         title="Edit budget"
                                                     >
-                                                        <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                                                        <Pencil className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                                     </button>
                                                 </div>
                                                 {isOverBudget && (

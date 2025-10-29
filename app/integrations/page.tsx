@@ -166,11 +166,11 @@ export default function IntegrationsPage() {
             <div className="container mx-auto py-8 px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="animate-pulse">
-                        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-2/3 mb-8"></div>
+                        <div className="h-8 bg-secondary rounded w-1/3 mb-4"></div>
+                        <div className="h-4 bg-secondary rounded w-2/3 mb-8"></div>
                         <div className="grid gap-6 md:grid-cols-2">
-                            <div className="h-64 bg-gray-200 rounded-lg"></div>
-                            <div className="h-64 bg-gray-200 rounded-lg"></div>
+                            <div className="h-64 bg-secondary rounded-lg"></div>
+                            <div className="h-64 bg-secondary rounded-lg"></div>
                         </div>
                     </div>
                 </div>
@@ -183,7 +183,7 @@ export default function IntegrationsPage() {
             <div className="container mx-auto py-8 px-4">
                 <div className="max-w-2xl mx-auto text-center">
                     <h1 className="text-2xl font-bold mb-4">Please Log In</h1>
-                    <p className="text-gray-600 mb-4">You need to be logged in to manage integrations.</p>
+                    <p className="text-muted-foreground mb-4">You need to be logged in to manage integrations.</p>
                     <Button onClick={() => router.push('/auth/login')}>Log In</Button>
                 </div>
             </div>
@@ -195,7 +195,7 @@ export default function IntegrationsPage() {
             <div className="container mx-auto py-8 px-4">
                 <div className="max-w-2xl mx-auto text-center">
                     <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-                    <p className="text-gray-600 mb-4">Only administrators can access integrations.</p>
+                    <p className="text-muted-foreground mb-4">Only administrators can access integrations.</p>
                     <Button onClick={() => router.push('/')}>Return to Dashboard</Button>
                 </div>
             </div>
@@ -207,10 +207,10 @@ export default function IntegrationsPage() {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-3xl font-bold text-foreground dark:text-white mb-2">
                         Integrations
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground dark:text-gray-400">
                         Connect your business tools to streamline your workflow and get better insights.
                     </p>
                 </div>
@@ -218,10 +218,10 @@ export default function IntegrationsPage() {
                 {/* Status Messages */}
                 {message && (
                     <Alert className={`mb-6 ${message.type === "success"
-                            ? "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
+                            ? "border-green-200 bg-green-50 dark:bg-green-950/30 text-green-800 dark:border-green-800 dark:text-green-200"
                             : message.type === "error"
-                                ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
-                                : "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200"
+                                ? "border-red-200 bg-red-50 dark:bg-red-950/30 text-red-800 dark:border-red-800 dark:text-red-200"
+                                : "border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:border-blue-800 dark:text-blue-200"
                         }`}>
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>
@@ -257,7 +257,7 @@ export default function IntegrationsPage() {
                                         Connected
                                     </Badge>
                                 ) : (
-                                    <Badge variant="secondary" className="bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
+                                    <Badge variant="secondary" className="bg-secondary text-foreground border-border dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
                                         Not Connected
                                     </Badge>
                                 )}
@@ -269,7 +269,7 @@ export default function IntegrationsPage() {
                                 <div className="space-y-6">
                                     {/* Admin-only notice for non-admins */}
                                     {!isAdmin && (
-                                        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
                                             <div className="flex items-start gap-3">
                                                 <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                                                 <div className="text-sm">
@@ -287,36 +287,36 @@ export default function IntegrationsPage() {
                                     {/* Benefits Section */}
                                     <div className="grid gap-4 md:grid-cols-3">
                                         <div className="flex items-start gap-3">
-                                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <div className="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex items-center justify-center flex-shrink-0">
                                                 <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-sm">Automatic Sync</h4>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                <p className="text-xs text-muted-foreground dark:text-gray-400">
                                                     Keep your data up-to-date automatically
                                                 </p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-start gap-3">
-                                            <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <div className="w-8 h-8 bg-green-50 dark:bg-green-950/30 rounded-lg flex items-center justify-center flex-shrink-0">
                                                 <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-sm">Better Insights</h4>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                <p className="text-xs text-muted-foreground dark:text-gray-400">
                                                     Get detailed financial analytics
                                                 </p>
                                             </div>
                                         </div>
 
                                         <div className="flex items-start gap-3">
-                                            <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <div className="w-8 h-8 bg-purple-50 dark:bg-purple-950/30 rounded-lg flex items-center justify-center flex-shrink-0">
                                                 <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-sm">Secure & Safe</h4>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                <p className="text-xs text-muted-foreground dark:text-gray-400">
                                                     Bank-level security standards
                                                 </p>
                                             </div>
@@ -324,7 +324,7 @@ export default function IntegrationsPage() {
                                     </div>
 
                                     {/* Connection CTA - Admin Only */}
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border dark:border-gray-800">
                                         {isAdmin ? (
                                             <>
                                                 <Button
@@ -349,15 +349,15 @@ export default function IntegrationsPage() {
                                                 </Button>
                                             </>
                                         ) : (
-                                            <div className="w-full text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="w-full text-center p-4 bg-secondary dark:bg-gray-900 rounded-lg">
+                                                <p className="text-sm text-muted-foreground dark:text-gray-400">
                                                     Contact your administrator to connect Xero
                                                 </p>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                    <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
                                         <div className="flex items-start gap-3">
                                             <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                                             <div className="text-sm">
@@ -377,7 +377,7 @@ export default function IntegrationsPage() {
                                     {/* Connection Details */}
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div>
-                                            <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                            <h4 className="font-medium text-sm text-muted-foreground dark:text-gray-400 mb-1">
                                                 Organization
                                             </h4>
                                             <p className="text-lg font-medium">
@@ -385,7 +385,7 @@ export default function IntegrationsPage() {
                                             </p>
                                         </div>
                                         <div>
-                                            <h4 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                            <h4 className="font-medium text-sm text-muted-foreground dark:text-gray-400 mb-1">
                                                 Connected Since
                                             </h4>
                                             <p className="text-lg font-medium">
@@ -396,7 +396,7 @@ export default function IntegrationsPage() {
 
                                     {/* Sync Status */}
                                     {syncStatus && (
-                                        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                                        <div className="bg-secondary dark:bg-gray-900 rounded-lg p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <h4 className="font-medium flex items-center gap-2">
                                                     <Clock className="w-4 h-4" />
@@ -412,26 +412,26 @@ export default function IntegrationsPage() {
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                                 <div className="text-center">
                                                     <div className="text-lg font-bold text-blue-600">{syncStatus.dataCounts?.invoices || 0}</div>
-                                                    <div className="text-xs text-gray-600 dark:text-gray-400">Invoices</div>
+                                                    <div className="text-xs text-muted-foreground dark:text-gray-400">Invoices</div>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="text-lg font-bold text-purple-600">{syncStatus.dataCounts?.departments || 0}</div>
-                                                    <div className="text-xs text-gray-600 dark:text-gray-400">Departments</div>
+                                                    <div className="text-xs text-muted-foreground dark:text-gray-400">Departments</div>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="text-lg font-bold text-orange-600">{syncStatus.dataCounts?.stages || 0}</div>
-                                                    <div className="text-xs text-gray-600 dark:text-gray-400">Stages</div>
+                                                    <div className="text-xs text-muted-foreground dark:text-gray-400">Stages</div>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="text-lg font-bold text-green-600">{syncStatus.dataCounts?.lineItems || 0}</div>
-                                                    <div className="text-xs text-gray-600 dark:text-gray-400">Line Items</div>
+                                                    <div className="text-xs text-muted-foreground dark:text-gray-400">Line Items</div>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Actions */}
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border dark:border-gray-800">
                                         <Button variant="outline" onClick={() => router.push('/projects')}>
                                             View Projects
                                         </Button>
@@ -464,7 +464,7 @@ export default function IntegrationsPage() {
                             </CardHeader>
                             <CardContent>
                                 <Badge variant="secondary" className="mb-3">Coming Soon</Badge>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-sm text-muted-foreground dark:text-gray-400">
                                     Connect your QuickBooks account for seamless financial data sync.
                                 </p>
                             </CardContent>
@@ -485,7 +485,7 @@ export default function IntegrationsPage() {
                             </CardHeader>
                             <CardContent>
                                 <Badge variant="secondary" className="mb-3">Coming Soon</Badge>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-sm text-muted-foreground dark:text-gray-400">
                                     Sync payment data and customer information from Stripe.
                                 </p>
                             </CardContent>
@@ -506,7 +506,7 @@ export default function IntegrationsPage() {
                             </CardHeader>
                             <CardContent>
                                 <Badge variant="secondary" className="mb-3">Coming Soon</Badge>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-sm text-muted-foreground dark:text-gray-400">
                                     Get project notifications and updates in your Slack channels.
                                 </p>
                             </CardContent>

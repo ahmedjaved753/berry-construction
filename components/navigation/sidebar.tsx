@@ -120,7 +120,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
             {/* Sidebar - Mobile browser UI adaptive */}
             <aside
-                className={`fixed left-0 top-0 bg-white/80 backdrop-blur-md border-r border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+                className={`fixed left-0 top-0 bg-card/80 backdrop-blur-md border-r border-border dark:bg-gray-950/80 dark:border-gray-800/60 z-50 transition-transform duration-300 ease-in-out w-64 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                     }`}
                 style={{
                     // Dynamic height that adapts to mobile browser UI changes
@@ -131,14 +131,14 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             >
                 <div className="flex flex-col h-full overflow-hidden" style={{ maxHeight: 'calc(var(--vh, 1vh) * 100)' }}>
                     {/* Header with close button - Fixed */}
-                    <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200/60 dark:border-gray-800/60 flex items-center justify-between">
-                        <div className="text-lg font-bold text-gray-900 dark:text-white">
+                    <div className="flex-shrink-0 px-4 py-3 border-b border-border dark:border-gray-800/60 flex items-center justify-between">
+                        <div className="text-lg font-bold text-foreground dark:text-white">
                             Berry Construction
                         </div>
                         {/* Close button for mobile */}
                         <button
                             onClick={onToggle}
-                            className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex-shrink-0"
+                            className="md:hidden p-2 rounded-lg hover:bg-accent dark:hover:bg-gray-700 transition-colors duration-200 flex-shrink-0"
                         >
                             <div className="w-5 h-5 relative">
                                 <span className="absolute h-0.5 w-5 bg-gray-600 dark:bg-gray-300 transform rotate-45 top-2.5" />
@@ -150,7 +150,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     {/* Navigation - Scrollable */}
                     <nav className="flex-1 overflow-y-auto px-4 py-2 min-h-0" style={{ scrollbarWidth: 'thin' }}>
                         <div className="space-y-2 pb-2">
-                            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-1">
+                            <div className="text-xs font-semibold text-muted-foreground dark:text-gray-400 uppercase tracking-wider px-3 py-1">
                                 Navigation
                             </div>
 
@@ -180,7 +180,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                             <div className="truncate">{item.label}</div>
                                             <div className={`text-xs truncate ${isActive
                                                 ? "text-purple-600 dark:text-purple-400"
-                                                : "text-gray-500 dark:text-gray-400"
+                                                : "text-muted-foreground dark:text-gray-400"
                                                 }`}>
                                                 {item.description}
                                             </div>
@@ -195,7 +195,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     </nav>
 
                     {/* User info and logout section - Fixed at bottom */}
-                    <div className="flex-shrink-0 px-4 py-2 pb-6 md:pb-4 border-t border-gray-200/60 dark:border-gray-800/60 space-y-2">
+                    <div className="flex-shrink-0 px-4 py-2 pb-6 md:pb-4 border-t border-border dark:border-gray-800/60 space-y-2">
                         {user ? (
                             <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
@@ -206,14 +206,14 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     {/* OPTIMIZED: Show user email immediately, upgrade to full name when profile loads */}
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                    <div className="text-sm font-semibold text-foreground dark:text-white truncate">
                                         {profile?.full_name || user.email?.split('@')[0] || 'User'}
                                         {profileLoading && !profile?.full_name && (
                                             <span className="ml-2 inline-block w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin"></span>
                                         )}
                                     </div>
                                     <div className="flex items-center space-x-2">
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        <span className="text-xs text-muted-foreground dark:text-gray-400 truncate">
                                             {user.email}
                                         </span>
                                         {/* OPTIMIZED: Show admin badge immediately when profile loads */}
@@ -222,17 +222,17 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
                                                 Admin
                                             </span>
                                         ) : profileLoading ? (
-                                            <div className="w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                            <div className="w-12 h-4 bg-secondary dark:bg-gray-700 rounded animate-pulse"></div>
                                         ) : null}
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                                <div className="w-10 h-10 bg-secondary dark:bg-gray-700 rounded-full animate-pulse"></div>
                                 <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                    <div className="h-4 bg-secondary dark:bg-gray-700 rounded animate-pulse"></div>
+                                    <div className="h-3 bg-secondary dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
                                 </div>
                             </div>
                         )}

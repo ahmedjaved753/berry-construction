@@ -160,7 +160,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="min-h-screen bg-background dark:bg-gray-900/50">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+    <div className="min-h-screen bg-background dark:bg-gray-900/50">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
@@ -187,10 +187,10 @@ export default function AdminDashboard() {
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-foreground dark:text-white mb-2">
                 User Management
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-muted-foreground dark:text-gray-400">
                 Manage user accounts, roles, and access permissions
               </p>
             </div>
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                     <TableBody>
                       {users.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                             No users found
                           </TableCell>
                         </TableRow>

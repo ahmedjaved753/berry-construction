@@ -136,12 +136,12 @@ export default function HomePage() {
   // OPTIMIZED: Only show loading state for initial auth loading (not profile loading)
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-secondary dark:bg-gray-900">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <div className="space-y-2">
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading your dashboard...</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">This should only take a moment</p>
+            <p className="text-lg font-medium text-foreground dark:text-gray-300">Loading your dashboard...</p>
+            <p className="text-sm text-muted-foreground dark:text-gray-400">This should only take a moment</p>
             {loadingTimeout && (
               <div className="pt-4 space-y-2">
                 <p className="text-sm text-orange-600 dark:text-orange-400">Taking longer than usual...</p>
@@ -158,17 +158,17 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-background dark:from-gray-900 dark:to-gray-800">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto text-center">
             <div className="mb-8">
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <span className="text-white font-bold text-xl">BC</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground dark:text-white mb-4">
                 Berry Construction
               </h1>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+              <p className="text-xl text-muted-foreground dark:text-gray-300 mb-8">
                 Streamline your construction business with integrated project management and financial insights.
               </p>
             </div>

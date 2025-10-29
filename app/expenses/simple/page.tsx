@@ -104,7 +104,7 @@ export default function SimpleExpensesPage() {
     if (loading) {
         console.log("🔴 [SIMPLE PAGE RENDER] Showing loading skeleton");
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+            <div className="min-h-screen bg-background">
                 <div className="max-w-7xl mx-auto p-6">
                     {/* Header Skeleton */}
                     <div className="mb-10">
@@ -147,7 +147,7 @@ export default function SimpleExpensesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-10">
@@ -157,8 +157,8 @@ export default function SimpleExpensesPage() {
                                 <Building2 className="h-8 w-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-4xl font-bold text-gray-900 mb-1">Department Expenses</h1>
-                                <p className="text-gray-600 text-lg">Track financial performance across all departments</p>
+                                <h1 className="text-4xl font-bold text-foreground mb-1">Department Expenses</h1>
+                                <p className="text-muted-foreground text-lg">Track financial performance across all departments</p>
                             </div>
                         </div>
                         <Badge variant="secondary" className="px-4 py-2 text-sm">
@@ -170,57 +170,58 @@ export default function SimpleExpensesPage() {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-emerald-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden hover:scale-105">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-emerald-700 mb-2 uppercase tracking-wide">Total Income</p>
-                                    <p className="text-3xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</p>
+                                    <p className="text-sm font-medium text-emerald-400 mb-2">TOTAL INCOME</p>
+                                    <p className="text-3xl font-bold text-foreground">{formatCurrency(totalIncome)}</p>
+                                    <p className="text-xs text-emerald-400/80 mt-2">All departments</p>
                                 </div>
-                                <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg">
-                                    <TrendingUp className="h-7 w-7 text-white" />
+                                <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center ring-2 ring-emerald-500/30">
+                                    <TrendingUp className="w-7 h-7 text-emerald-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-xl bg-gradient-to-br from-red-50 to-red-100 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-rose-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden hover:scale-105">
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-red-700 mb-2 uppercase tracking-wide">Total Expenses</p>
-                                    <p className="text-3xl font-bold text-red-600">{formatCurrency(totalExpenses)}</p>
+                                    <p className="text-sm font-medium text-rose-400 mb-2">TOTAL EXPENSES</p>
+                                    <p className="text-3xl font-bold text-foreground">{formatCurrency(totalExpenses)}</p>
+                                    <p className="text-xs text-rose-400/80 mt-2">All departments</p>
                                 </div>
-                                <div className="p-4 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl shadow-lg">
-                                    <TrendingDown className="h-7 w-7 text-white" />
+                                <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center ring-2 ring-rose-500/30">
+                                    <TrendingDown className="w-7 h-7 text-rose-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 ${totalNet >= 0
-                        ? 'bg-gradient-to-br from-blue-50 to-blue-100'
-                        : 'bg-gradient-to-br from-orange-50 to-orange-100'
-                        }`}>
-                        <CardContent className="p-6">
+                    <Card className={`bg-card border-l-4 ${totalNet >= 0 ? "border-blue-500" : "border-orange-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden hover:scale-105`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${totalNet >= 0 ? "from-blue-500/10" : "from-orange-500/10"} to-transparent pointer-events-none`}></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className={`text-sm font-semibold mb-2 uppercase tracking-wide ${totalNet >= 0 ? 'text-blue-700' : 'text-orange-700'
-                                        }`}>
-                                        Net Total
+                                    <p className={`text-sm font-medium mb-2 ${totalNet >= 0 ? "text-blue-400" : "text-orange-400"}`}>
+                                        NET TOTAL
                                     </p>
-                                    <p className={`text-3xl font-bold ${totalNet >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                    <p className="text-3xl font-bold text-foreground">
                                         {formatCurrency(totalNet)}
                                     </p>
+                                    <p className={`text-xs mt-2 ${totalNet >= 0 ? "text-blue-400/80" : "text-orange-400/80"}`}>
+                                        {totalNet >= 0 ? "Profit" : "Loss"}
+                                    </p>
                                 </div>
-                                <div className={`p-4 rounded-2xl shadow-lg ${totalNet >= 0
-                                    ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-                                    : 'bg-gradient-to-br from-orange-500 to-orange-600'
-                                    }`}>
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${totalNet >= 0 ? "bg-blue-500/20 ring-blue-500/30" : "bg-orange-500/20 ring-orange-500/30"}`}>
                                     {totalNet >= 0 ? (
-                                        <TrendingUp className="h-7 w-7 text-white" />
+                                        <TrendingUp className="w-7 h-7 text-blue-400" />
                                     ) : (
-                                        <TrendingDown className="h-7 w-7 text-white" />
+                                        <TrendingDown className="w-7 h-7 text-orange-400" />
                                     )}
                                 </div>
                             </div>
@@ -231,18 +232,18 @@ export default function SimpleExpensesPage() {
                 {/* Department Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {departments.map((dept) => (
-                        <Card key={dept.department_id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-white border-0 shadow-md">
-                            <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                        <Card key={dept.department_id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-card border-0 shadow-md">
+                            <CardHeader className="pb-4 bg-card/50 border-b border-border">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start space-x-3">
                                         <div className="p-2 bg-blue-100 rounded-xl">
                                             <Building2 className="h-5 w-5 text-blue-600" />
                                         </div>
                                         <div className="flex-1">
-                                            <CardTitle className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                                            <CardTitle className="text-lg font-semibold text-foreground mb-1 group-hover:text-blue-600 transition-colors">
                                                 {dept.department_name}
                                             </CardTitle>
-                                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                                                 <span>{dept.total_invoices} invoices</span>
                                                 {dept.latest_activity && (
                                                     <span>Last activity: {new Date(dept.latest_activity).toLocaleDateString()}</span>
@@ -280,7 +281,7 @@ export default function SimpleExpensesPage() {
                                         <p className={`text-xl font-bold ${dept.net_profit >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                                             {formatCurrency(dept.net_profit)}
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-xs text-muted-foreground mt-1">
                                             {dept.net_profit >= 0 ? 'Profit' : 'Loss'}
                                         </p>
                                     </div>
@@ -298,20 +299,20 @@ export default function SimpleExpensesPage() {
                                 {/* Stages */}
                                 {dept.stages.length > 0 && (
                                     <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Construction Stages</h4>
+                                        <h4 className="text-sm font-semibold text-foreground mb-2">Construction Stages</h4>
                                         {dept.stages.slice(0, 3).map((stage, index) => (
-                                            <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                            <div key={index} className="p-3 bg-secondary rounded-lg">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-medium text-gray-900 text-sm">{stage.stage_name}</span>
+                                                    <span className="font-medium text-foreground text-sm">{stage.stage_name}</span>
                                                     <div className="text-right">
                                                         <p className="font-bold text-red-600">{formatCurrency(stage.stage_total_spent)}</p>
-                                                        <p className="text-xs text-gray-500">{stage.line_items_count} line items</p>
+                                                        <p className="text-xs text-muted-foreground">{stage.line_items_count} line items</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
                                         {dept.stages.length > 3 && (
-                                            <p className="text-xs text-gray-500 text-center mt-2">
+                                            <p className="text-xs text-muted-foreground text-center mt-2">
                                                 +{dept.stages.length - 3} more stages
                                             </p>
                                         )}
@@ -325,8 +326,8 @@ export default function SimpleExpensesPage() {
                 {departments.length === 0 && (
                     <div className="text-center py-12">
                         <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Department Data</h3>
-                        <p className="text-gray-600 mb-4">No expense data found. Connect to Xero to sync your financial data.</p>
+                        <h3 className="text-xl font-semibold text-foreground mb-2">No Department Data</h3>
+                        <p className="text-muted-foreground mb-4">No expense data found. Connect to Xero to sync your financial data.</p>
                         <Link
                             href="/integrations"
                             className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

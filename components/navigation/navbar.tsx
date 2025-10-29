@@ -49,7 +49,7 @@ export function Navbar() {
     // Navigation links moved to sidebar - navbar now focuses on branding and auth
 
     return (
-        <nav className={`sticky top-0 z-50 w-full transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-gray-200/60 dark:bg-gray-950/80 dark:border-gray-800/60 ${isScrolled ? "shadow-sm" : ""
+        <nav className={`sticky top-0 z-50 w-full transition-all duration-300 bg-card/80 backdrop-blur-md border-b border-border dark:bg-gray-950/80 dark:border-gray-800/60 ${isScrolled ? "shadow-sm" : ""
             }`}>
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
@@ -59,7 +59,7 @@ export function Navbar() {
                             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg transition-transform group-hover:scale-105">
                                 <span className="text-white font-bold text-sm">BC</span>
                             </div>
-                            <span className="font-semibold text-lg text-gray-900 dark:text-white">
+                            <span className="font-semibold text-lg text-foreground dark:text-white">
                                 Berry Construction
                             </span>
                         </Link>
@@ -74,7 +74,7 @@ export function Navbar() {
                                 {/* User info */}
                                 <div className="flex items-center space-x-3">
                                     <div className="text-right">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div className="text-sm font-medium text-foreground dark:text-white">
                                             {profile?.full_name || 'User'}
                                         </div>
                                         <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -94,7 +94,7 @@ export function Navbar() {
                                     disabled={isLoggingOut}
                                     variant="ghost"
                                     size="sm"
-                                    className="text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-300 dark:hover:text-red-400 dark:hover:bg-red-950/20 transition-colors"
+                                    className="text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:text-gray-300 dark:hover:text-red-400 dark:hover:bg-red-950/20 transition-colors"
                                 >
                                     {isLoggingOut ? (
                                         <div className="flex items-center space-x-2">
@@ -115,7 +115,7 @@ export function Navbar() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => router.push("/auth/login")}
-                                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                                    className="text-muted-foreground hover:text-foreground dark:text-gray-300 dark:hover:text-white"
                                 >
                                     Sign In
                                 </Button>
@@ -134,7 +134,7 @@ export function Navbar() {
                     <div className="md:hidden">
                         <button
                             onClick={toggleMenu}
-                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-lg p-2 transition-colors"
+                            className="text-muted-foreground dark:text-gray-300 hover:text-foreground dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-lg p-2 transition-colors"
                             aria-label="Toggle menu"
                         >
                             <div className="w-6 h-6 relative">
@@ -159,7 +159,7 @@ export function Navbar() {
             {/* Mobile Navigation Menu - Auth only */}
             <div
                 className={`md:hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                    } overflow-hidden bg-white/95 backdrop-blur-md dark:bg-gray-950/95 border-t border-gray-200/60 dark:border-gray-800/60`}
+                    } overflow-hidden bg-card/95 backdrop-blur-md dark:bg-gray-950/95 border-t border-border dark:border-gray-800/60`}
             >
                 <div className="px-2 pt-2 pb-3">
                     {/* Mobile auth section - navigation links moved to sidebar */}
@@ -174,7 +174,7 @@ export function Navbar() {
                                             </span>
                                         </div>
                                         <div>
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                            <div className="text-sm font-medium text-foreground dark:text-white">
                                                 {profile?.full_name || 'User'}
                                             </div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -187,7 +187,7 @@ export function Navbar() {
                                     onClick={handleLogout}
                                     disabled={isLoggingOut}
                                     variant="ghost"
-                                    className="w-full justify-start text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-300 dark:hover:text-red-400 dark:hover:bg-red-950/20"
+                                    className="w-full justify-start text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:text-gray-300 dark:hover:text-red-400 dark:hover:bg-red-950/20"
                                 >
                                     {isLoggingOut ? "Logging out..." : "🔓 Logout"}
                                 </Button>

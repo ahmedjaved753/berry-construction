@@ -115,7 +115,7 @@ export default function UnassignedBillsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-amber-50">
+      <div className="min-h-screen bg-background">
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
         <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -141,7 +141,7 @@ export default function UnassignedBillsPage() {
 
   if (error || !departmentInfo) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-amber-50">
+      <div className="min-h-screen bg-background">
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
         <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -149,10 +149,10 @@ export default function UnassignedBillsPage() {
           <Card className="w-full max-w-md">
             <CardContent className="p-6 text-center">
               <Building2 className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 Failed to Load Unassigned Bills
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 {error || "Unable to load unassigned bills for this department."}
               </p>
               <Button onClick={() => router.back()} variant="outline">
@@ -166,7 +166,7 @@ export default function UnassignedBillsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-amber-50">
+    <div className="min-h-screen bg-background">
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -177,7 +177,7 @@ export default function UnassignedBillsPage() {
             <Button
               onClick={() => router.push(`/expenses/${departmentId}`)}
               variant="outline"
-              className="mb-4 hover:bg-amber-50"
+              className="mb-4 hover:bg-accent"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Department
@@ -188,10 +188,10 @@ export default function UnassignedBillsPage() {
                 <AlertCircle className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-1">
+                <h1 className="text-4xl font-bold text-foreground mb-1">
                   {departmentInfo.name} - Unassigned Bills
                 </h1>
-                <div className="flex items-center space-x-4 text-gray-600">
+                <div className="flex items-center space-x-4 text-muted-foreground">
                   <Badge
                     variant="outline"
                     className="bg-amber-100 text-amber-800 border-amber-200"
@@ -232,9 +232,9 @@ export default function UnassignedBillsPage() {
           </Card>
 
           {/* Unassigned Bills List */}
-          <Card className="border-0 shadow-xl bg-white">
+          <Card className="border-0 shadow-xl bg-card">
             <CardHeader>
-              <CardTitle className="flex items-center text-xl font-bold text-gray-900">
+              <CardTitle className="flex items-center text-xl font-bold text-foreground">
                 <FileWarning className="h-6 w-6 mr-3 text-amber-600" />
                 Unassigned Bills
                 <Badge

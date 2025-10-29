@@ -140,7 +140,7 @@ export default function XeroConnectionPrompt({
 
     if (variant === "banner") {
         return (
-            <Alert className={`border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200 ${className}`}>
+            <Alert className={`border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:border-blue-800 dark:text-blue-200 ${className}`}>
                 <Zap className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between pr-6">
                     <span>
@@ -170,7 +170,7 @@ export default function XeroConnectionPrompt({
 
     if (variant === "inline") {
         return (
-            <div className={`flex items-center gap-4 p-4 border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950 rounded-lg ${className}`}>
+            <div className={`flex items-center gap-4 p-4 border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 rounded-lg ${className}`}>
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                         <Zap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -201,7 +201,7 @@ export default function XeroConnectionPrompt({
 
     // Default card variant
     return (
-        <Card className={`border-blue-200 dark:border-blue-800 ${className}`}>
+        <Card className={`border-blue-200 dark:border-blue-900 ${className}`}>
             <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ export default function XeroConnectionPrompt({
                         {content.benefits.map((benefit, index) => (
                             <div key={index} className="flex items-center gap-2 text-sm">
                                 <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                                <span className="text-gray-700 dark:text-gray-300">{benefit}</span>
+                                <span className="text-foreground dark:text-gray-300">{benefit}</span>
                             </div>
                         ))}
                     </div>
@@ -264,9 +264,9 @@ export default function XeroConnectionPrompt({
                     </div>
 
                     {/* Trust indicator */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                        <Shield className="w-4 h-4 text-gray-500" />
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 pt-2 border-t border-border dark:border-gray-800">
+                        <Shield className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground dark:text-gray-400">
                             Secure connection • Read-only access • Disconnect anytime
                         </span>
                     </div>

@@ -191,7 +191,7 @@ export default function SimpleDepartmentDetailPage({
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+            <div className="min-h-screen bg-background">
                 <div className="max-w-7xl mx-auto p-6">
                     <div className="animate-pulse">
                         <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
@@ -208,7 +208,7 @@ export default function SimpleDepartmentDetailPage({
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-8">
@@ -226,14 +226,14 @@ export default function SimpleDepartmentDetailPage({
                                 <Building2 className="h-8 w-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-4xl font-bold text-gray-900">
+                                <h1 className="text-4xl font-bold text-foreground">
                                     {departmentInfo?.name}
                                 </h1>
                                 <div className="flex items-center space-x-3 mt-2">
                                     <Badge variant={departmentInfo?.status === 'Active' ? 'default' : 'secondary'}>
                                         {departmentInfo?.status}
                                     </Badge>
-                                    <span className="text-gray-600">
+                                    <span className="text-muted-foreground">
                                         Department ID: {departmentId.slice(0, 8)}...
                                     </span>
                                 </div>
@@ -247,75 +247,81 @@ export default function SimpleDepartmentDetailPage({
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-emerald-100">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-emerald-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-emerald-700 mb-1">Total Income</p>
-                                    <p className="text-2xl font-bold text-emerald-600">
+                                    <p className="text-sm font-medium text-emerald-400 mb-2">TOTAL INCOME</p>
+                                    <p className="text-3xl font-bold text-foreground">
                                         {formatCurrency(invoiceSummary?.total_income || 0)}
                                     </p>
                                 </div>
-                                <TrendingUp className="h-8 w-8 text-emerald-500" />
+                                <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center ring-2 ring-emerald-500/30">
+                                    <TrendingUp className="w-7 h-7 text-emerald-400" />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-red-100">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-rose-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-red-700 mb-1">Total Expenses</p>
-                                    <p className="text-2xl font-bold text-red-600">
+                                    <p className="text-sm font-medium text-rose-400 mb-2">TOTAL EXPENSES</p>
+                                    <p className="text-3xl font-bold text-foreground">
                                         {formatCurrency(invoiceSummary?.total_expenses || 0)}
                                     </p>
                                 </div>
-                                <TrendingDown className="h-8 w-8 text-red-500" />
+                                <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center ring-2 ring-rose-500/30">
+                                    <TrendingDown className="w-7 h-7 text-rose-400" />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className={`border-0 shadow-lg ${(invoiceSummary?.net_profit || 0) >= 0
-                            ? 'bg-gradient-to-br from-blue-50 to-blue-100'
-                            : 'bg-gradient-to-br from-orange-50 to-orange-100'
-                        }`}>
-                        <CardContent className="p-6">
+                    <Card className={`bg-card border-l-4 ${(invoiceSummary?.net_profit || 0) >= 0 ? "border-blue-500" : "border-orange-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${(invoiceSummary?.net_profit || 0) >= 0 ? "from-blue-500/10" : "from-orange-500/10"} to-transparent pointer-events-none`}></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className={`text-sm font-medium mb-1 ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-blue-700' : 'text-orange-700'
-                                        }`}>
-                                        Net Profit
+                                    <p className={`text-sm font-medium mb-2 ${(invoiceSummary?.net_profit || 0) >= 0 ? "text-blue-400" : "text-orange-400"}`}>
+                                        NET PROFIT
                                     </p>
-                                    <p className={`text-2xl font-bold ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-blue-600' : 'text-orange-600'
-                                        }`}>
+                                    <p className="text-3xl font-bold text-foreground">
                                         {formatCurrency(invoiceSummary?.net_profit || 0)}
                                     </p>
                                 </div>
-                                <DollarSign className={`h-8 w-8 ${(invoiceSummary?.net_profit || 0) >= 0 ? 'text-blue-500' : 'text-orange-500'
-                                    }`} />
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${(invoiceSummary?.net_profit || 0) >= 0 ? "bg-blue-500/20 ring-blue-500/30" : "bg-orange-500/20 ring-orange-500/30"}`}>
+                                    <DollarSign className={`w-7 h-7 ${(invoiceSummary?.net_profit || 0) >= 0 ? "text-blue-400" : "text-orange-400"}`} />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-purple-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-purple-700 mb-1">Total Line Items</p>
-                                    <p className="text-2xl font-bold text-purple-600">
+                                    <p className="text-sm font-medium text-purple-400 mb-2">TOTAL LINE ITEMS</p>
+                                    <p className="text-3xl font-bold text-foreground">
                                         {invoiceSummary?.total_line_items || 0}
                                     </p>
                                 </div>
-                                <FileText className="h-8 w-8 text-purple-500" />
+                                <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center ring-2 ring-purple-500/30">
+                                    <FileText className="w-7 h-7 text-purple-400" />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Recent Line Items */}
-                <Card className="border-0 shadow-xl bg-white">
-                    <CardHeader className="border-b border-gray-100">
-                        <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
+                <Card className="border-0 shadow-xl bg-card">
+                    <CardHeader className="border-b border-border">
+                        <CardTitle className="text-xl font-semibold text-foreground flex items-center">
                             <FileText className="h-6 w-6 mr-2 text-blue-600" />
                             Recent Line Items
                         </CardTitle>
@@ -324,13 +330,13 @@ export default function SimpleDepartmentDetailPage({
                         {lineItems.length > 0 ? (
                             <div className="divide-y divide-gray-100">
                                 {lineItems.map((item) => (
-                                    <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
+                                    <div key={item.id} className="p-6 hover:bg-secondary transition-colors">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
-                                                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                                                <h4 className="text-lg font-medium text-foreground mb-2">
                                                     {item.description}
                                                 </h4>
-                                                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                                                     <span className="flex items-center">
                                                         <Users className="h-4 w-4 mr-1" />
                                                         {item.contact_name}
@@ -361,8 +367,8 @@ export default function SimpleDepartmentDetailPage({
                         ) : (
                             <div className="p-8 text-center">
                                 <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">No Line Items Found</h3>
-                                <p className="text-gray-600">No financial data available for this department.</p>
+                                <h3 className="text-lg font-medium text-foreground mb-2">No Line Items Found</h3>
+                                <p className="text-muted-foreground">No financial data available for this department.</p>
                             </div>
                         )}
                     </CardContent>

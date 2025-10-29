@@ -55,7 +55,7 @@ export default function ExpensesTestPage() {
     const totalNet = totalIncome - totalExpenses;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-10">
@@ -64,8 +64,8 @@ export default function ExpensesTestPage() {
                             <Building2 className="h-8 w-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-1">Expenses Test Page</h1>
-                            <p className="text-gray-600 text-lg">Static test data to verify UI is working</p>
+                            <h1 className="text-4xl font-bold text-foreground mb-1">Expenses Test Page</h1>
+                            <p className="text-muted-foreground text-lg">Static test data to verify UI is working</p>
                         </div>
                     </div>
                     <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full w-32"></div>
@@ -134,18 +134,18 @@ export default function ExpensesTestPage() {
                 {/* Department Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {testDepartments.map((dept) => (
-                        <Card key={dept.department_id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-white border-0 shadow-md">
-                            <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                        <Card key={dept.department_id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-card border-0 shadow-md">
+                            <CardHeader className="pb-4 bg-card/50 border-b border-border">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start space-x-3">
                                         <div className="p-2 bg-blue-100 rounded-xl">
                                             <Building2 className="h-5 w-5 text-blue-600" />
                                         </div>
                                         <div className="flex-1">
-                                            <CardTitle className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                                            <CardTitle className="text-lg font-semibold text-foreground mb-1 group-hover:text-blue-600 transition-colors">
                                                 {dept.department_name}
                                             </CardTitle>
-                                            <div className="text-sm text-gray-500">
+                                            <div className="text-sm text-muted-foreground">
                                                 {dept.total_invoices} invoices
                                             </div>
                                         </div>
@@ -191,14 +191,14 @@ export default function ExpensesTestPage() {
                                 {/* Stages */}
                                 {dept.stages.length > 0 && (
                                     <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Stages</h4>
+                                        <h4 className="text-sm font-semibold text-foreground mb-2">Stages</h4>
                                         {dept.stages.map((stage, index) => (
-                                            <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                            <div key={index} className="p-3 bg-secondary rounded-lg">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-medium text-gray-900 text-sm">{stage.stage_name}</span>
+                                                    <span className="font-medium text-foreground text-sm">{stage.stage_name}</span>
                                                     <div className="text-right">
                                                         <p className="font-bold text-red-600">{formatCurrency(stage.stage_total_spent)}</p>
-                                                        <p className="text-xs text-gray-500">{stage.line_items_count} items</p>
+                                                        <p className="text-xs text-muted-foreground">{stage.line_items_count} items</p>
                                                     </div>
                                                 </div>
                                             </div>

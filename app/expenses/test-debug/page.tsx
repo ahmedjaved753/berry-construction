@@ -84,7 +84,7 @@ export default function TestDebugExpensesPage() {
     console.log("🔵 [TEST DEBUG] About to render UI");
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto p-6">
                 {/* Header */}
                 <div className="mb-10">
@@ -94,8 +94,8 @@ export default function TestDebugExpensesPage() {
                                 <Building2 className="h-8 w-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-4xl font-bold text-gray-900 mb-1">Test Debug Expenses</h1>
-                                <p className="text-gray-600 text-lg">Pure static data - no loading states</p>
+                                <h1 className="text-4xl font-bold text-foreground mb-1">Test Debug Expenses</h1>
+                                <p className="text-muted-foreground text-lg">Pure static data - no loading states</p>
                             </div>
                         </div>
                         <Badge variant="secondary" className="px-4 py-2 text-sm">
@@ -182,18 +182,18 @@ export default function TestDebugExpensesPage() {
                 {/* Department Cards */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {departments.map((dept) => (
-                        <Card key={dept.department_id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-white border-0 shadow-md">
-                            <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                        <Card key={dept.department_id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-card border-0 shadow-md">
+                            <CardHeader className="pb-4 bg-card/50 border-b border-border">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start space-x-3">
                                         <div className="p-2 bg-blue-100 rounded-xl">
                                             <Building2 className="h-5 w-5 text-blue-600" />
                                         </div>
                                         <div className="flex-1">
-                                            <CardTitle className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                                            <CardTitle className="text-lg font-semibold text-foreground mb-1 group-hover:text-blue-600 transition-colors">
                                                 {dept.department_name}
                                             </CardTitle>
-                                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                                                 <span>{dept.total_invoices} invoices</span>
                                                 {dept.latest_activity && (
                                                     <span>Last activity: {new Date(dept.latest_activity).toLocaleDateString()}</span>
@@ -231,7 +231,7 @@ export default function TestDebugExpensesPage() {
                                         <p className={`text-xl font-bold ${dept.net_profit >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
                                             {formatCurrency(dept.net_profit)}
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-xs text-muted-foreground mt-1">
                                             {dept.net_profit >= 0 ? 'Profit' : 'Loss'}
                                         </p>
                                     </div>
@@ -250,14 +250,14 @@ export default function TestDebugExpensesPage() {
                                 {/* Stages */}
                                 {dept.stages.length > 0 && (
                                     <div className="space-y-2">
-                                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Construction Stages</h4>
+                                        <h4 className="text-sm font-semibold text-foreground mb-2">Construction Stages</h4>
                                         {dept.stages.map((stage, index) => (
-                                            <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                            <div key={index} className="p-3 bg-secondary rounded-lg">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-medium text-gray-900 text-sm">{stage.stage_name}</span>
+                                                    <span className="font-medium text-foreground text-sm">{stage.stage_name}</span>
                                                     <div className="text-right">
                                                         <p className="font-bold text-red-600">{formatCurrency(stage.stage_total_spent)}</p>
-                                                        <p className="text-xs text-gray-500">{stage.line_items_count} items</p>
+                                                        <p className="text-xs text-muted-foreground">{stage.line_items_count} items</p>
                                                     </div>
                                                 </div>
                                             </div>

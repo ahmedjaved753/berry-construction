@@ -94,7 +94,7 @@ export function BudgetEditDialog({
           <div className="grid gap-2">
             <Label htmlFor="budget-amount">Budget Amount (£)</Label>
             <div className="relative">
-              <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="budget-amount"
                 type="text"
@@ -112,7 +112,7 @@ export function BudgetEditDialog({
 
           {currentBudget > 0 && (
             <div className="rounded-lg bg-blue-50 p-3 text-sm">
-              <p className="text-gray-700">
+              <p className="text-foreground">
                 Current budget:{" "}
                 <span className="font-semibold">
                   £{currentBudget.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

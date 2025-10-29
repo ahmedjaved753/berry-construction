@@ -177,7 +177,7 @@ export default function ProfilePage() {
 
   if (!user || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="min-h-screen bg-background dark:bg-gray-900/50">
         <Navbar />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">
@@ -190,7 +190,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+    <div className="min-h-screen bg-background dark:bg-gray-900/50">
       {/* Modern Navbar */}
       <Navbar />
 
@@ -203,9 +203,9 @@ export default function ProfilePage() {
         <div className="container mx-auto px-6 py-8">
           <div className="max-w-4xl mx-auto">
             {/* Profile Card */}
-            <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm mb-8">
+            <div className="bg-card/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-border dark:border-gray-700/60 p-6 shadow-sm mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Profile</h2>
+                <h2 className="text-xl font-semibold text-foreground dark:text-white">Profile</h2>
                 <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
                   View All
                 </Button>
@@ -221,10 +221,10 @@ export default function ProfilePage() {
                     <div className="text-white text-lg">⚠️</div>
                   </div>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+                <h3 className="text-2xl font-bold text-foreground dark:text-white mt-6 mb-2">
                   Profile Features Coming Soon
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                <p className="text-muted-foreground dark:text-gray-400 max-w-md mx-auto">
                   We're building enhanced profile customization and settings for your account.
                 </p>
               </div>
@@ -234,23 +234,23 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Profile Info Card */}
               <div className="lg:col-span-1">
-                <Card className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 border-gray-200/60 dark:border-gray-700/60">
+                <Card className="bg-card/70 backdrop-blur-sm dark:bg-gray-800/70 border-border dark:border-gray-700/60">
                   <CardHeader className="text-center">
                     <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
                       <span className="text-white font-bold text-2xl">
                         {(profile.full_name || profile.email || 'U')[0].toUpperCase()}
                       </span>
                     </div>
-                    <CardTitle className="text-gray-900 dark:text-white">
+                    <CardTitle className="text-foreground dark:text-white">
                       {profile.full_name || 'Unnamed User'}
                     </CardTitle>
-                    <CardDescription className="text-gray-600 dark:text-gray-400">
+                    <CardDescription className="text-muted-foreground dark:text-gray-400">
                       {profile.email}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Role:</span>
+                      <span className="text-sm text-muted-foreground dark:text-gray-400">Role:</span>
                       <Badge
                         className={profile.role === "admin"
                           ? "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
@@ -262,14 +262,14 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Joined:</span>
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-sm text-muted-foreground dark:text-gray-400">Joined:</span>
+                      <span className="text-sm text-foreground dark:text-white">
                         {new Date(profile.created_at).toLocaleDateString()}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+                      <span className="text-sm text-muted-foreground dark:text-gray-400">Status:</span>
                       <span className="text-sm text-green-600 dark:text-green-400">✅ Active</span>
                     </div>
                   </CardContent>
@@ -278,15 +278,15 @@ export default function ProfilePage() {
 
               {/* Edit Profile Form */}
               <div className="lg:col-span-2">
-                <Card className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 border-gray-200/60 dark:border-gray-700/60">
+                <Card className="bg-card/70 backdrop-blur-sm dark:bg-gray-800/70 border-border dark:border-gray-700/60">
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
                         <span className="text-white text-lg">✏️</span>
                       </div>
                       <div>
-                        <CardTitle className="text-gray-900 dark:text-white">Edit Profile</CardTitle>
-                        <CardDescription className="text-gray-600 dark:text-gray-400">
+                        <CardTitle className="text-foreground dark:text-white">Edit Profile</CardTitle>
+                        <CardDescription className="text-muted-foreground dark:text-gray-400">
                           Update your personal information
                         </CardDescription>
                       </div>
@@ -295,7 +295,7 @@ export default function ProfilePage() {
                   <CardContent>
                     <form onSubmit={handleUpdateProfile} className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="text-gray-900 dark:text-white">
+                        <Label htmlFor="email" className="text-foreground dark:text-white">
                           Email Address
                         </Label>
                         <Input
@@ -303,15 +303,15 @@ export default function ProfilePage() {
                           type="email"
                           value={profile.email}
                           disabled
-                          className="bg-gray-100/70 dark:bg-gray-700/70 text-gray-500 dark:text-gray-400"
+                          className="bg-secondary dark:bg-gray-700/70 text-muted-foreground dark:text-gray-400"
                         />
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground dark:text-gray-400">
                           Email cannot be changed at this time
                         </p>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="fullName" className="text-gray-900 dark:text-white">
+                        <Label htmlFor="fullName" className="text-foreground dark:text-white">
                           Full Name
                         </Label>
                         <Input
@@ -319,17 +319,17 @@ export default function ProfilePage() {
                           type="text"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          className="bg-white/70 dark:bg-gray-800/70 border-gray-200/60 dark:border-gray-700/60"
+                          className="bg-card/70 dark:bg-gray-800/70 border-border dark:border-gray-700/60"
                           placeholder="Enter your full name"
                         />
                       </div>
 
                       {/* Coming Soon Features */}
-                      <div className="space-y-4 p-4 bg-gray-100/70 dark:bg-gray-700/70 rounded-lg border border-gray-200/60 dark:border-gray-600/60">
-                        <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <div className="space-y-4 p-4 bg-secondary dark:bg-gray-700/70 rounded-lg border border-border dark:border-gray-600/60">
+                        <h4 className="font-semibold text-foreground dark:text-white flex items-center gap-2">
                           🚧 Coming Soon Features
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-muted-foreground dark:text-gray-400">
                           <div>📱 Phone Number</div>
                           <div>🏢 Company Name</div>
                           <div>📍 Location</div>
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                           type="button"
                           variant="outline"
                           onClick={() => setFullName(profile.full_name || "")}
-                          className="bg-white/50 hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-gray-200/60 dark:border-gray-700/60"
+                          className="bg-card/50 hover:bg-accent dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-border dark:border-gray-700/60"
                         >
                           Reset
                         </Button>
@@ -383,15 +383,15 @@ export default function ProfilePage() {
 
             {/* Xero Integration Section */}
             <div className="mt-8">
-              <Card className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 border-gray-200/60 dark:border-gray-700/60">
+              <Card className="bg-card/70 backdrop-blur-sm dark:bg-gray-800/70 border-border dark:border-gray-700/60">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
                       <span className="text-white text-lg">🔗</span>
                     </div>
                     <div>
-                      <CardTitle className="text-gray-900 dark:text-white">Xero Integration</CardTitle>
-                      <CardDescription className="text-gray-600 dark:text-gray-400">
+                      <CardTitle className="text-foreground dark:text-white">Xero Integration</CardTitle>
+                      <CardDescription className="text-muted-foreground dark:text-gray-400">
                         Connect your Xero account to access financial data
                       </CardDescription>
                     </div>
@@ -399,7 +399,7 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {xeroLoading ? (
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-muted-foreground dark:text-gray-400">
                       <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                       Checking connection status...
                     </div>
@@ -417,23 +417,23 @@ export default function ProfilePage() {
                       </div>
 
                       {xeroConnection.org_name && (
-                        <div className="p-4 bg-gray-100/70 dark:bg-gray-700/70 rounded-lg">
+                        <div className="p-4 bg-secondary dark:bg-gray-700/70 rounded-lg">
                           <div className="space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">Organization:</span>
-                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              <span className="text-sm text-muted-foreground dark:text-gray-400">Organization:</span>
+                              <span className="text-sm font-medium text-foreground dark:text-white">
                                 {xeroConnection.org_name}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">Connected:</span>
-                              <span className="text-sm text-gray-900 dark:text-white">
+                              <span className="text-sm text-muted-foreground dark:text-gray-400">Connected:</span>
+                              <span className="text-sm text-foreground dark:text-white">
                                 {new Date(xeroConnection.connected_at).toLocaleDateString()}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">Token Expires:</span>
-                              <span className="text-sm text-gray-900 dark:text-white">
+                              <span className="text-sm text-muted-foreground dark:text-gray-400">Token Expires:</span>
+                              <span className="text-sm text-foreground dark:text-white">
                                 {new Date(xeroConnection.expires_at).toLocaleDateString()}
                               </span>
                             </div>
@@ -445,14 +445,14 @@ export default function ProfilePage() {
                         <Button
                           variant="outline"
                           onClick={() => window.open('/api/xero/invoices', '_blank')}
-                          className="bg-white/50 hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-gray-200/60 dark:border-gray-700/60"
+                          className="bg-card/50 hover:bg-accent dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-border dark:border-gray-700/60"
                         >
                           📄 View Invoices
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => window.open('/api/xero/contacts', '_blank')}
-                          className="bg-white/50 hover:bg-gray-50 dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-gray-200/60 dark:border-gray-700/60"
+                          className="bg-card/50 hover:bg-accent dark:bg-gray-800/50 dark:hover:bg-gray-700/50 border-border dark:border-gray-700/60"
                         >
                           👥 View Contacts
                         </Button>
@@ -467,7 +467,7 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-gray-600 dark:text-gray-400">
+                      <p className="text-muted-foreground dark:text-gray-400">
                         Connect your Xero account to automatically sync invoices, contacts, and other financial data.
                       </p>
 

@@ -27,7 +27,7 @@ import {
     TrendingUp,
     TrendingDown,
     Building2,
-    DollarSign,
+    PoundSterling,
     BarChart3,
     Filter,
     X,
@@ -36,6 +36,7 @@ import {
     Receipt,
     Wallet,
     AlertCircle,
+    Star,
 } from "lucide-react";
 
 interface DepartmentExpense {
@@ -87,6 +88,9 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
     const [selectedDepartmentIds, setSelectedDepartmentIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+    const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+    const [loadingFavorites, setLoadingFavorites] = useState(true);
 
     // Get status filter from URL or default to paid_authorized
     const statusFilter = searchParams.get('status') || 'paid_authorized';
@@ -110,10 +114,29 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
         });
     }, [departments]);
 
+    // Fetch user's favorite departments on mount
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            try {
+                const response = await fetch('/api/favorites/departments');
+                if (response.ok) {
+                    const data = await response.json();
+                    setFavoriteIds(data.favoriteIds || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch favorites:', error);
+            } finally {
+                setLoadingFavorites(false);
+            }
+        };
+
+        fetchFavorites();
+    }, []);
+
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("en-US", {
+        return new Intl.NumberFormat("en-GB", {
             style: "currency",
-            currency: "USD",
+            currency: "GBP",
             minimumFractionDigits: 2,
         }).format(amount);
     };
@@ -128,35 +151,62 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
         }
     };
 
-    // Filter departments based on selection
-    const filteredDepartments = useMemo(() => {
-        if (selectedDepartmentIds.length === 0) {
-            return departments;
-        }
-        return departments.filter(dept => selectedDepartmentIds.includes(dept.department_id));
-    }, [departments, selectedDepartmentIds]);
+    // Toggle favorite status for a department
+    const toggleFavorite = async (departmentId: string) => {
+        const isFavorited = favoriteIds.includes(departmentId);
 
-    // Calculate filtered stats
-    const filteredStats = useMemo(() => {
-        const totalIncome = filteredDepartments.reduce((sum, d) => sum + d.income_received, 0);
-        const totalExpenses = filteredDepartments.reduce((sum, d) => sum + d.expenses_spent, 0);
-        const totalExpensesExclOverheads = filteredDepartments.reduce((sum, d) => sum + d.expenses_excl_overheads, 0);
-        const totalOverheads = filteredDepartments.reduce((sum, d) => sum + d.overheads, 0);
-        const totalUnassignedBills = filteredDepartments.reduce((sum, d) => sum + d.unassigned_bills, 0);
-        const grossProfit = totalIncome - totalExpensesExclOverheads;
-        const netProfit = grossProfit - totalOverheads;
-        return {
-            totalIncome,
-            totalExpenses,
-            totalExpensesExclOverheads,
-            totalOverheads,
-            totalUnassignedBills,
-            grossProfit,
-            netProfit,
-            totalDepartments: filteredDepartments.length,
-            totalInvoices: filteredDepartments.reduce((sum, d) => sum + d.total_invoices, 0),
-        };
-    }, [filteredDepartments]);
+        // Optimistic update
+        setFavoriteIds(prev =>
+            isFavorited
+                ? prev.filter(id => id !== departmentId)
+                : [...prev, departmentId]
+        );
+
+        try {
+            if (isFavorited) {
+                // Remove from favorites
+                await fetch(`/api/favorites/departments?departmentId=${departmentId}`, {
+                    method: 'DELETE',
+                });
+            } else {
+                // Add to favorites
+                await fetch('/api/favorites/departments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ departmentId }),
+                });
+            }
+        } catch (error) {
+            console.error('Failed to toggle favorite:', error);
+            // Revert on error
+            setFavoriteIds(prev =>
+                isFavorited
+                    ? [...prev, departmentId]
+                    : prev.filter(id => id !== departmentId)
+            );
+        }
+    };
+
+    // Filter departments based on favorites view and manual selection
+    const filteredDepartments = useMemo(() => {
+        let filtered = departments;
+
+        // Apply favorites filter if enabled
+        if (showOnlyFavorites) {
+            filtered = filtered.filter(dept => favoriteIds.includes(dept.department_id));
+        }
+
+        // Apply manual department selection filter
+        if (selectedDepartmentIds.length > 0) {
+            filtered = filtered.filter(dept => selectedDepartmentIds.includes(dept.department_id));
+        }
+
+        return filtered;
+    }, [departments, showOnlyFavorites, favoriteIds, selectedDepartmentIds]);
+
+    // Stats always show ALL departments (not filtered)
+    // This is the key requirement: financial overview remains complete
+    const displayStats = overallStats;
 
     const toggleDepartment = (departmentId: string) => {
         console.log("📍 [TOGGLE DEPT] departmentId:", departmentId);
@@ -191,7 +241,7 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
     }, [departments, searchQuery]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-background">
             <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
             <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -204,10 +254,10 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                             <BarChart3 className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
                                 Department Expenses
                             </h1>
-                            <p className="text-slate-600 mt-1">
+                            <p className="text-muted-foreground mt-1">
                                 Track income, expenses, and profitability by construction project
                             </p>
                         </div>
@@ -215,6 +265,34 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
 
                     {/* Filters */}
                     <div className="flex items-center gap-2 flex-wrap">
+                        {/* Favorites Toggle */}
+                        <div className="inline-flex items-center rounded-md border bg-background p-1 shadow-sm">
+                            <Button
+                                variant={!showOnlyFavorites ? "secondary" : "ghost"}
+                                size="sm"
+                                onClick={() => setShowOnlyFavorites(false)}
+                                className="h-8 px-3"
+                            >
+                                <Building2 className="h-4 w-4 mr-2" />
+                                All Projects
+                            </Button>
+                            <Button
+                                variant={showOnlyFavorites ? "secondary" : "ghost"}
+                                size="sm"
+                                onClick={() => setShowOnlyFavorites(true)}
+                                className="h-8 px-3"
+                                disabled={loadingFavorites}
+                            >
+                                <Star className="h-4 w-4 mr-2" />
+                                Favorites
+                                {favoriteIds.length > 0 && (
+                                    <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-800 border-yellow-300">
+                                        {favoriteIds.length}
+                                    </Badge>
+                                )}
+                            </Button>
+                        </div>
+
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                             <SelectTrigger className="w-[200px]">
@@ -315,80 +393,66 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                     {/* Row 1: Total Income, Total Expenses (excl. overheads), Gross Profit */}
 
                     {/* Total Income */}
-                    <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-emerald-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-emerald-700 mb-2">TOTAL INCOME</p>
-                                    <p className="text-3xl font-bold text-emerald-900">
-                                        {formatCompactCurrency(filteredStats.totalIncome)}
+                                    <p className="text-sm font-medium text-emerald-400 mb-2">TOTAL INCOME</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {formatCompactCurrency(displayStats.totalIncome)}
                                     </p>
-                                    <p className="text-xs text-emerald-600 mt-2">
-                                        From {filteredStats.totalDepartments} departments
+                                    <p className="text-xs text-emerald-400/80 mt-2">
+                                        From {displayStats.totalDepartments} departments
                                     </p>
                                 </div>
-                                <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center">
-                                    <TrendingUp className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center ring-2 ring-emerald-500/30">
+                                    <TrendingUp className="w-7 h-7 text-emerald-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Total Expenses (excl. overheads) */}
-                    <Card className="bg-gradient-to-br from-rose-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-rose-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-rose-700 mb-2">TOTAL EXPENSES</p>
-                                    <p className="text-3xl font-bold text-rose-900">
-                                        {formatCompactCurrency(filteredStats.totalExpensesExclOverheads)}
+                                    <p className="text-sm font-medium text-rose-400 mb-2">TOTAL EXPENSES</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {formatCompactCurrency(displayStats.totalExpensesExclOverheads)}
                                     </p>
-                                    <p className="text-xs text-rose-600 mt-2">
+                                    <p className="text-xs text-rose-400/80 mt-2">
                                         Excludes overheads
                                     </p>
                                 </div>
-                                <div className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center">
-                                    <TrendingDown className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center ring-2 ring-rose-500/30">
+                                    <TrendingDown className="w-7 h-7 text-rose-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Gross Profit */}
-                    <Card
-                        className={`bg-gradient-to-br ${filteredStats.grossProfit >= 0
-                                ? "from-blue-50 to-cyan-50"
-                                : "from-orange-50 to-amber-50"
-                            } border-0 shadow-lg hover:shadow-xl transition-all duration-300`}
-                    >
-                        <CardContent className="p-6">
+                    <Card className={`bg-card border-l-4 ${displayStats.grossProfit >= 0 ? "border-blue-500" : "border-orange-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${displayStats.grossProfit >= 0 ? "from-blue-500/10" : "from-orange-500/10"} to-transparent pointer-events-none`}></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p
-                                        className={`text-sm font-medium mb-2 ${filteredStats.grossProfit >= 0 ? "text-blue-700" : "text-orange-700"
-                                            }`}
-                                    >
+                                    <p className={`text-sm font-medium mb-2 ${displayStats.grossProfit >= 0 ? "text-blue-400" : "text-orange-400"}`}>
                                         GROSS PROFIT
                                     </p>
-                                    <p
-                                        className={`text-3xl font-bold ${filteredStats.grossProfit >= 0 ? "text-blue-900" : "text-orange-900"
-                                            }`}
-                                    >
-                                        {filteredStats.grossProfit >= 0 ? "" : "-"}
-                                        {formatCompactCurrency(Math.abs(filteredStats.grossProfit))}
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {displayStats.grossProfit >= 0 ? "" : "-"}
+                                        {formatCompactCurrency(Math.abs(displayStats.grossProfit))}
                                     </p>
-                                    <p
-                                        className={`text-xs mt-2 ${filteredStats.grossProfit >= 0 ? "text-blue-600" : "text-orange-600"
-                                            }`}
-                                    >
+                                    <p className={`text-xs mt-2 ${displayStats.grossProfit >= 0 ? "text-blue-400/80" : "text-orange-400/80"}`}>
                                         Income - Expenses (excl. overheads)
                                     </p>
                                 </div>
-                                <div
-                                    className={`w-14 h-14 rounded-2xl flex items-center justify-center ${filteredStats.grossProfit >= 0 ? "bg-blue-500" : "bg-orange-500"
-                                        }`}
-                                >
-                                    <BarChart3 className="w-7 h-7 text-white" />
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${displayStats.grossProfit >= 0 ? "bg-blue-500/20 ring-blue-500/30" : "bg-orange-500/20 ring-orange-500/30"}`}>
+                                    <BarChart3 className={`w-7 h-7 ${displayStats.grossProfit >= 0 ? "text-blue-400" : "text-orange-400"}`} />
                                 </div>
                             </div>
                         </CardContent>
@@ -397,80 +461,66 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                     {/* Row 2: Overheads, Net Profit, Unassigned Bills */}
 
                     {/* Overheads */}
-                    <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-purple-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-purple-700 mb-2">OVERHEADS</p>
-                                    <p className="text-3xl font-bold text-purple-900">
-                                        {formatCompactCurrency(filteredStats.totalOverheads)}
+                                    <p className="text-sm font-medium text-purple-400 mb-2">OVERHEADS</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {formatCompactCurrency(displayStats.totalOverheads)}
                                     </p>
-                                    <p className="text-xs text-purple-600 mt-2">
+                                    <p className="text-xs text-purple-400/80 mt-2">
                                         Stage: 21 - Overheads
                                     </p>
                                 </div>
-                                <div className="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center">
-                                    <Wallet className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center ring-2 ring-purple-500/30">
+                                    <Wallet className="w-7 h-7 text-purple-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Net Profit */}
-                    <Card
-                        className={`bg-gradient-to-br ${filteredStats.netProfit >= 0
-                                ? "from-indigo-50 to-blue-50"
-                                : "from-red-50 to-pink-50"
-                            } border-0 shadow-lg hover:shadow-xl transition-all duration-300`}
-                    >
-                        <CardContent className="p-6">
+                    <Card className={`bg-card border-l-4 ${displayStats.netProfit >= 0 ? "border-indigo-500" : "border-red-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${displayStats.netProfit >= 0 ? "from-indigo-500/10" : "from-red-500/10"} to-transparent pointer-events-none`}></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p
-                                        className={`text-sm font-medium mb-2 ${filteredStats.netProfit >= 0 ? "text-indigo-700" : "text-red-700"
-                                            }`}
-                                    >
+                                    <p className={`text-sm font-medium mb-2 ${displayStats.netProfit >= 0 ? "text-indigo-400" : "text-red-400"}`}>
                                         NET PROFIT
                                     </p>
-                                    <p
-                                        className={`text-3xl font-bold ${filteredStats.netProfit >= 0 ? "text-indigo-900" : "text-red-900"
-                                            }`}
-                                    >
-                                        {filteredStats.netProfit >= 0 ? "" : "-"}
-                                        {formatCompactCurrency(Math.abs(filteredStats.netProfit))}
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {displayStats.netProfit >= 0 ? "" : "-"}
+                                        {formatCompactCurrency(Math.abs(displayStats.netProfit))}
                                     </p>
-                                    <p
-                                        className={`text-xs mt-2 ${filteredStats.netProfit >= 0 ? "text-indigo-600" : "text-red-600"
-                                            }`}
-                                    >
-                                        {filteredStats.netProfit >= 0 ? "Profit" : "Loss"} after overheads
+                                    <p className={`text-xs mt-2 ${displayStats.netProfit >= 0 ? "text-indigo-400/80" : "text-red-400/80"}`}>
+                                        {displayStats.netProfit >= 0 ? "Profit" : "Loss"} after overheads
                                     </p>
                                 </div>
-                                <div
-                                    className={`w-14 h-14 rounded-2xl flex items-center justify-center ${filteredStats.netProfit >= 0 ? "bg-indigo-500" : "bg-red-500"
-                                        }`}
-                                >
-                                    <DollarSign className="w-7 h-7 text-white" />
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${displayStats.netProfit >= 0 ? "bg-indigo-500/20 ring-indigo-500/30" : "bg-red-500/20 ring-red-500/30"}`}>
+                                    <PoundSterling className={`w-7 h-7 ${displayStats.netProfit >= 0 ? "text-indigo-400" : "text-red-400"}`} />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Unassigned Bills */}
-                    <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardContent className="p-6">
+                    <Card className="bg-card border-l-4 border-amber-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none"></div>
+                        <CardContent className="p-6 relative">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-amber-700 mb-2">UNASSIGNED BILLS</p>
-                                    <p className="text-3xl font-bold text-amber-900">
-                                        {formatCompactCurrency(filteredStats.totalUnassignedBills)}
+                                    <p className="text-sm font-medium text-amber-400 mb-2">UNASSIGNED BILLS</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {formatCompactCurrency(displayStats.totalUnassignedBills)}
                                     </p>
-                                    <p className="text-xs text-amber-600 mt-2">
+                                    <p className="text-xs text-amber-400/80 mt-2">
                                         Missing department or stage
                                     </p>
                                 </div>
-                                <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center">
-                                    <AlertCircle className="w-7 h-7 text-white" />
+                                <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center ring-2 ring-amber-500/30">
+                                    <AlertCircle className="w-7 h-7 text-amber-400" />
                                 </div>
                             </div>
                         </CardContent>
@@ -480,8 +530,8 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                 {/* Department Cards */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                        <Building2 className="w-6 h-6 text-slate-700" />
-                        <h2 className="text-2xl font-semibold text-slate-800">
+                        <Building2 className="w-6 h-6 text-foreground" />
+                        <h2 className="text-2xl font-semibold text-foreground">
                             Projects ({filteredDepartments.length})
                         </h2>
                         {selectedDepartmentIds.length > 0 && (
@@ -492,25 +542,47 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                     </div>
 
                     {filteredDepartments.length === 0 ? (
-                        <Card className="border-2 border-dashed border-slate-300 bg-white/50">
+                        <Card className="border-2 border-dashed border-border bg-card/50">
                             <CardContent className="p-12 text-center">
-                                <Building2 className="w-16 h-16 mx-auto text-slate-400 mb-4" />
-                                <h3 className="text-lg font-semibold text-slate-700 mb-2">
-                                    {selectedDepartmentIds.length > 0 ? "No matching departments" : "No departments found"}
-                                </h3>
-                                <p className="text-slate-500">
-                                    {selectedDepartmentIds.length > 0
-                                        ? "Try clearing your filters to see all departments"
-                                        : "Connect your Xero account to sync department data"}
-                                </p>
-                                {selectedDepartmentIds.length > 0 && (
-                                    <Button
-                                        variant="outline"
-                                        onClick={clearFilters}
-                                        className="mt-4"
-                                    >
-                                        Clear Filters
-                                    </Button>
+                                {showOnlyFavorites ? (
+                                    <>
+                                        <Star className="w-16 h-16 mx-auto text-amber-400 mb-4" />
+                                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                                            No favorite departments yet
+                                        </h3>
+                                        <p className="text-muted-foreground">
+                                            Click the star icon on any department card to add it to your favorites
+                                        </p>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setShowOnlyFavorites(false)}
+                                            className="mt-4"
+                                        >
+                                            <Building2 className="h-4 w-4 mr-2" />
+                                            Show All Projects
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Building2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                                            {selectedDepartmentIds.length > 0 ? "No matching departments" : "No departments found"}
+                                        </h3>
+                                        <p className="text-muted-foreground">
+                                            {selectedDepartmentIds.length > 0
+                                                ? "Try clearing your filters to see all departments"
+                                                : "Connect your Xero account to sync department data"}
+                                        </p>
+                                        {selectedDepartmentIds.length > 0 && (
+                                            <Button
+                                                variant="outline"
+                                                onClick={clearFilters}
+                                                className="mt-4"
+                                            >
+                                                Clear Filters
+                                            </Button>
+                                        )}
+                                    </>
                                 )}
                             </CardContent>
                         </Card>
@@ -529,6 +601,8 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                                     income_invoices={department.income_invoices}
                                     expense_invoices={department.expense_invoices}
                                     stages={department.stages}
+                                    isFavorited={favoriteIds.includes(department.department_id)}
+                                    onToggleFavorite={() => toggleFavorite(department.department_id)}
                                 />
                             ))}
                         </div>
@@ -536,20 +610,20 @@ export default function ExpensesClient({ departments, overallStats }: ExpensesCl
                 </div>
 
                 {/* Footer Info */}
-                <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200">
+                <Card className="bg-muted border-border">
                     <CardContent className="p-6">
                         <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <BarChart3 className="w-5 h-5 text-blue-600" />
+                            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="space-y-2">
-                                <h3 className="font-semibold text-slate-800">Financial Data Status</h3>
-                                <p className="text-sm text-slate-600">
+                                <h3 className="font-semibold text-foreground">Financial Data Status</h3>
+                                <p className="text-sm text-muted-foreground">
                                     Showing <Badge variant="outline" className="mx-1">PAID</Badge> and{" "}
                                     <Badge variant="outline" className="mx-1">AUTHORISED</Badge> invoices only.
                                     Excludes voided and deleted transactions.
                                 </p>
-                                <p className="text-xs text-slate-500 mt-2">
+                                <p className="text-xs text-muted-foreground mt-2">
                                     Data syncs automatically from Xero every 10 minutes
                                 </p>
                             </div>

@@ -132,7 +132,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-background">
             <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
             <SidebarToggle isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -145,10 +145,10 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                 <CalendarIcon className="w-8 h-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
                                     Yearly Financial Snapshot
                                 </h1>
-                                <p className="text-slate-600 mt-1">
+                                <p className="text-muted-foreground mt-1">
                                     View complete financial picture for any year
                                 </p>
                             </div>
@@ -196,101 +196,74 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Total Income */}
-                        <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardContent className="p-6">
+                        <Card className="bg-card border-l-4 border-emerald-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
+                            <CardContent className="p-6 relative">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-emerald-700 mb-2">
+                                        <p className="text-sm font-medium text-emerald-400 mb-2">
                                             TOTAL INCOME
                                         </p>
-                                        <p className="text-3xl font-bold text-emerald-900">
+                                        <p className="text-3xl font-bold text-foreground">
                                             {formatCompactCurrency(snapshot.summary.total_income)}
                                         </p>
-                                        <p className="text-xs text-emerald-600 mt-2">
+                                        <p className="text-xs text-emerald-400/80 mt-2">
                                             {snapshot.summary.income_invoice_count} invoice
                                             {snapshot.summary.income_invoice_count !== 1 ? "s" : ""}
                                         </p>
                                     </div>
-                                    <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center">
-                                        <TrendingUp className="w-7 h-7 text-white" />
+                                    <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center ring-2 ring-emerald-500/30">
+                                        <TrendingUp className="w-7 h-7 text-emerald-400" />
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Total Expenses */}
-                        <Card className="bg-gradient-to-br from-rose-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <CardContent className="p-6">
+                        <Card className="bg-card border-l-4 border-rose-500 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none"></div>
+                            <CardContent className="p-6 relative">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-rose-700 mb-2">
+                                        <p className="text-sm font-medium text-rose-400 mb-2">
                                             TOTAL EXPENSES
                                         </p>
-                                        <p className="text-3xl font-bold text-rose-900">
+                                        <p className="text-3xl font-bold text-foreground">
                                             {formatCompactCurrency(snapshot.summary.total_expenses)}
                                         </p>
-                                        <p className="text-xs text-rose-600 mt-2">
+                                        <p className="text-xs text-rose-400/80 mt-2">
                                             {snapshot.summary.expense_invoice_count} invoice
                                             {snapshot.summary.expense_invoice_count !== 1 ? "s" : ""}
                                         </p>
                                     </div>
-                                    <div className="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center">
-                                        <TrendingDown className="w-7 h-7 text-white" />
+                                    <div className="w-14 h-14 bg-rose-500/20 rounded-2xl flex items-center justify-center ring-2 ring-rose-500/30">
+                                        <TrendingDown className="w-7 h-7 text-rose-400" />
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Net Total */}
-                        <Card
-                            className={`bg-gradient-to-br ${
-                                snapshot.summary.net_total >= 0
-                                    ? "from-blue-50 to-indigo-50"
-                                    : "from-orange-50 to-amber-50"
-                            } border-0 shadow-lg hover:shadow-xl transition-all duration-300`}
-                        >
-                            <CardContent className="p-6">
+                        <Card className={`bg-card border-l-4 ${snapshot.summary.net_total >= 0 ? "border-blue-500" : "border-orange-500"} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}>
+                            <div className={`absolute inset-0 bg-gradient-to-br ${snapshot.summary.net_total >= 0 ? "from-blue-500/10" : "from-orange-500/10"} to-transparent pointer-events-none`}></div>
+                            <CardContent className="p-6 relative">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p
-                                            className={`text-sm font-medium mb-2 ${
-                                                snapshot.summary.net_total >= 0
-                                                    ? "text-blue-700"
-                                                    : "text-orange-700"
-                                            }`}
-                                        >
+                                        <p className={`text-sm font-medium mb-2 ${snapshot.summary.net_total >= 0 ? "text-blue-400" : "text-orange-400"}`}>
                                             NET TOTAL
                                         </p>
-                                        <p
-                                            className={`text-3xl font-bold ${
-                                                snapshot.summary.net_total >= 0
-                                                    ? "text-blue-900"
-                                                    : "text-orange-900"
-                                            }`}
-                                        >
+                                        <p className="text-3xl font-bold text-foreground">
                                             {snapshot.summary.net_total >= 0 ? "" : "-"}
                                             {formatCompactCurrency(
                                                 Math.abs(snapshot.summary.net_total)
                                             )}
                                         </p>
-                                        <p
-                                            className={`text-xs mt-2 ${
-                                                snapshot.summary.net_total >= 0
-                                                    ? "text-blue-600"
-                                                    : "text-orange-600"
-                                            }`}
-                                        >
+                                        <p className={`text-xs mt-2 ${snapshot.summary.net_total >= 0 ? "text-blue-400/80" : "text-orange-400/80"}`}>
                                             {snapshot.summary.net_total >= 0 ? "Profit" : "Loss"}
                                         </p>
                                     </div>
-                                    <div
-                                        className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                                            snapshot.summary.net_total >= 0
-                                                ? "bg-blue-500"
-                                                : "bg-orange-500"
-                                        }`}
-                                    >
-                                        <PoundSterling className="w-7 h-7 text-white" />
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ring-2 ${snapshot.summary.net_total >= 0 ? "bg-blue-500/20 ring-blue-500/30" : "bg-orange-500/20 ring-orange-500/30"}`}>
+                                        <PoundSterling className={`w-7 h-7 ${snapshot.summary.net_total >= 0 ? "text-blue-400" : "text-orange-400"}`} />
                                     </div>
                                 </div>
                             </CardContent>
@@ -298,7 +271,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                     </div>
 
                     {/* Invoice Summary */}
-                    <div className="flex items-center gap-3 text-slate-600">
+                    <div className="flex items-center gap-3 text-muted-foreground">
                         <FileText className="w-5 h-5" />
                         <span className="font-medium">
                             FY {formatFinancialYear(snapshot.year)}: {snapshot.summary.invoice_count} Invoice
@@ -310,13 +283,13 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
 
                     {/* Empty State */}
                     {snapshot.invoices.length === 0 && (
-                        <Card className="border-2 border-dashed border-slate-300 bg-white/50">
+                        <Card className="border-2 border-dashed border-border bg-card/50">
                             <CardContent className="p-12 text-center">
-                                <FileText className="w-16 h-16 mx-auto text-slate-400 mb-4" />
-                                <h3 className="text-lg font-semibold text-slate-700 mb-2">
+                                <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                                <h3 className="text-lg font-semibold text-foreground mb-2">
                                     No invoices found
                                 </h3>
-                                <p className="text-slate-500">
+                                <p className="text-muted-foreground">
                                     There are no invoices for FY {formatFinancialYear(snapshot.year)}
                                 </p>
                             </CardContent>
@@ -330,7 +303,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                 <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
                                     <TrendingUp className="w-5 h-5 text-white" />
                                 </div>
-                                <h2 className="text-2xl font-semibold text-slate-800">
+                                <h2 className="text-2xl font-semibold text-foreground">
                                     Income Invoices ({incomeInvoices.length})
                                 </h2>
                             </div>
@@ -347,7 +320,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                 <div className="flex items-center justify-between w-full text-left">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3">
-                                                            <span className="font-semibold text-lg text-slate-800">
+                                                            <span className="font-semibold text-lg text-foreground">
                                                                 {invoice.contact_name}
                                                             </span>
                                                             <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -355,11 +328,11 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                             </Badge>
                                                         </div>
                                                         {invoice.reference && (
-                                                            <p className="text-sm text-slate-500 mt-1">
+                                                            <p className="text-sm text-muted-foreground mt-1">
                                                                 Ref: {invoice.reference}
                                                             </p>
                                                         )}
-                                                        <p className="text-xs text-slate-400 mt-1">
+                                                        <p className="text-xs text-muted-foreground mt-1">
                                                             {new Date(invoice.invoice_date).toLocaleDateString()} •{" "}
                                                             {invoice.line_items.length} line item
                                                             {invoice.line_items.length !== 1 ? "s" : ""}
@@ -377,14 +350,14 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                     {invoice.line_items.map((item) => (
                                                         <div
                                                             key={item.id}
-                                                            className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-lg"
+                                                            className="flex items-center justify-between py-3 px-4 bg-secondary rounded-lg"
                                                         >
                                                             <div className="flex-1">
-                                                                <p className="font-medium text-slate-800">
+                                                                <p className="font-medium text-foreground">
                                                                     {item.description}
                                                                 </p>
                                                                 <div className="flex items-center gap-2 mt-1">
-                                                                    <span className="text-sm text-slate-500">
+                                                                    <span className="text-sm text-muted-foreground">
                                                                         Qty: {item.quantity} × {formatCurrency(item.unit_amount)}
                                                                     </span>
                                                                     {item.department && (
@@ -408,7 +381,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="font-semibold text-slate-800">
+                                                                <p className="font-semibold text-foreground">
                                                                     {formatCurrency(item.line_amount)}
                                                                 </p>
                                                             </div>
@@ -430,7 +403,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                 <div className="w-10 h-10 bg-rose-500 rounded-lg flex items-center justify-center">
                                     <TrendingDown className="w-5 h-5 text-white" />
                                 </div>
-                                <h2 className="text-2xl font-semibold text-slate-800">
+                                <h2 className="text-2xl font-semibold text-foreground">
                                     Expense Invoices ({expenseInvoices.length})
                                 </h2>
                             </div>
@@ -447,7 +420,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                 <div className="flex items-center justify-between w-full text-left">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-3">
-                                                            <span className="font-semibold text-lg text-slate-800">
+                                                            <span className="font-semibold text-lg text-foreground">
                                                                 {invoice.contact_name}
                                                             </span>
                                                             <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
@@ -455,11 +428,11 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                             </Badge>
                                                         </div>
                                                         {invoice.reference && (
-                                                            <p className="text-sm text-slate-500 mt-1">
+                                                            <p className="text-sm text-muted-foreground mt-1">
                                                                 Ref: {invoice.reference}
                                                             </p>
                                                         )}
-                                                        <p className="text-xs text-slate-400 mt-1">
+                                                        <p className="text-xs text-muted-foreground mt-1">
                                                             {new Date(invoice.invoice_date).toLocaleDateString()} •{" "}
                                                             {invoice.line_items.length} line item
                                                             {invoice.line_items.length !== 1 ? "s" : ""}
@@ -477,14 +450,14 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                     {invoice.line_items.map((item) => (
                                                         <div
                                                             key={item.id}
-                                                            className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-lg"
+                                                            className="flex items-center justify-between py-3 px-4 bg-secondary rounded-lg"
                                                         >
                                                             <div className="flex-1">
-                                                                <p className="font-medium text-slate-800">
+                                                                <p className="font-medium text-foreground">
                                                                     {item.description}
                                                                 </p>
                                                                 <div className="flex items-center gap-2 mt-1">
-                                                                    <span className="text-sm text-slate-500">
+                                                                    <span className="text-sm text-muted-foreground">
                                                                         Qty: {item.quantity} × {formatCurrency(item.unit_amount)}
                                                                     </span>
                                                                     {item.department && (
@@ -508,7 +481,7 @@ export default function YearlyClient({ snapshot }: YearlyClientProps) {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="font-semibold text-slate-800">
+                                                                <p className="font-semibold text-foreground">
                                                                     {formatCurrency(item.line_amount)}
                                                                 </p>
                                                             </div>

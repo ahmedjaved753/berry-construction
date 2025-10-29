@@ -16,7 +16,7 @@ export default function FeaturesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="min-h-screen bg-background dark:bg-gray-900/50">
             <Navbar />
             {user && (
                 <>
@@ -29,9 +29,9 @@ export default function FeaturesPage() {
                 <div className="container mx-auto px-6 py-8">
                     <div className="max-w-4xl mx-auto">
                         {/* Features Card */}
-                        <div className="bg-white/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-gray-200/60 dark:border-gray-700/60 p-6 shadow-sm">
+                        <div className="bg-card/70 backdrop-blur-sm dark:bg-gray-800/70 rounded-xl border border-border dark:border-gray-700/60 p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Features</h2>
+                                <h2 className="text-xl font-semibold text-foreground dark:text-white">Features</h2>
                                 <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
                                     View All
                                 </Button>
@@ -47,10 +47,10 @@ export default function FeaturesPage() {
                                         <div className="text-white text-lg">⚠️</div>
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-6 mb-2">
+                                <h3 className="text-2xl font-bold text-foreground dark:text-white mt-6 mb-2">
                                     Features Coming Soon
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                                <p className="text-muted-foreground dark:text-gray-400 max-w-md mx-auto">
                                     We're building powerful features and tools for your construction management needs.
                                 </p>
                             </div>
