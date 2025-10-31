@@ -14,7 +14,8 @@
     "batch-sync": "tsx scripts/batch-sync-line-items.ts",
     "fix-unmapped": "tsx scripts/fix-unmapped-line-items.ts",
     "backfill-dates": "tsx scripts/backfill-invoice-dates.ts",
-    "test-rate-limit": "tsx scripts/test-xero-rate-limit.ts"
+    "test-rate-limit": "tsx scripts/test-xero-rate-limit.ts",
+    "check-pos": "tsx scripts/check-xero-purchase-orders.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
