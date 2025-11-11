@@ -78,6 +78,13 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             available: true
         },
         {
+            href: "/purchase-orders",
+            label: "Purchase Orders",
+            icon: "📦",
+            description: "View and manage all POs",
+            available: true
+        },
+        {
             href: "/expenses/daily",
             label: "Daily Snapshot",
             icon: "📅",
